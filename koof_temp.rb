@@ -29,3 +29,15 @@ url = "http://www.koofers.com/university-of-texas-austin-utexas/study-materials?
 doc = Nokogiri::HTML(open(url)).css('.title a').collect { |obj| obj[:href] }
 
 puts doc
+
+
+
+#####################
+# Create the mechanize object
+login = Mechanize.new
+
+# Set the user agent in mechanize
+login.user_agent_alias = ua
+
+# Set the page to access
+page = login.get("http://www.koofers.com/")

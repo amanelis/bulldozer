@@ -81,27 +81,9 @@ end
 
 # Join the threads
 begin 
-  threads.each { |t| 
-    p t.inspect
-    t.join 
-  }
+  threads.each { |t| t.join }
 rescue Net::HTTP::Persistent::Error => e
   puts "Net::HTTP::Persistent::Error"
   puts "Error Message: #{e.inspect}"
 end
-
-
-
-
-# require 'rubygems'
-# require 'mechanize'
-# require 'logger'
-# 
-# agent = Mechanize.new { |a| a.log = Logger.new("mech.log") }
-# agent.user_agent_alias = 'Mac Safari'
-# page = agent.get("http://www.google.com/")
-# search_form = page.form_with(:name => "f")
-# search_form.field_with(:name => "q").value = "Hello"
-# search_results = agent.submit(search_form)
-# puts search_results.body
 
