@@ -43,36 +43,19 @@ for state in states
     # Definitely need to thread these iterations out. We will try to paginate
     # Through as many pages as possible.
     (1..1000).each do |page|
-      url = university_professors + "&p=#{page}"
-      begin
-        documents = Nokogiri::HTML(open(url), UserAgent.generate_user_agent).css('.title a')
-      rescue Timeout::Error => e
-        puts "Error code: #{e.errno}"
-        puts "Error message: #{e.error}"
-        puts "Looks like this one failed, going to next..."
-        next
-      end
+      professors_url = university_professors + "&p=#{page}"
 
-      if documents.blank? || documents.nil? || documents.empty?
-        break
-      else
-        documents.each do |document|
-          puts "DOWNLOADING  ##########################################"
-
-          hack_url  = "http://koofers.com#{document['href']}/koofer.pdf&printButton=Yes&sendViewerEvents=Yes"
-          hack_cmd  = "wget -r -P ./exams/#{path} #{hack_url}"
-          wget_output = system(hack_cmd)
-          # puts "DOCUMENT: #{path}"
-
-          docs = docs + 1
-        end
-        puts "On page #{page}..."
-      end
-    end
-
-
-
-
+      # Grab all the professors on each page
+      professors = Nokogiri::HTML(open(professors_url), ua).css('.title a')
+      
+      # Break if no professors on data
+      break if professors.blank? || professors.nil? || professors.empty?
+      
+      # Now lets start the Iteration on the professors, this is going to be a lot of data
+      for professor in professors
+        
+      end # for professor in professors
+    end # (1..1000).each do |page|
   end # universities.each do |university|
 end # for state in states
 
