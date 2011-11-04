@@ -43,7 +43,7 @@ for state in states
     # Definitely need to thread these iterations out. We will try to paginate
     # Through as many pages as possible.
     (1..1000).each do |page|
-      url = "http://koofers.com#{base_university_url}study-materials?exams&p=#{page}"
+      url = university_professors + "&p=#{page}"
       begin
         documents = Nokogiri::HTML(open(url), UserAgent.generate_user_agent).css('.title a')
       rescue Timeout::Error => e
