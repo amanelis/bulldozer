@@ -44,20 +44,22 @@ for state in states
     # Definitely need to thread these iterations out. We will try to paginate
     # Through as many pages as possible.
     (1..1000).each do |page|
-      professors_url = university_professors + "&p=#{page}"
+      documents_url = university_exams + "&p=#{page}"
       
-      p professors_url
+      p documents_url
 
       # Grab all the professors on each page
-      professors = Nokogiri::HTML(open(professors_url), ua).css('.title a')
+      documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
       
       # Break if no professors on data
-      break if professors.nil? || professors.empty?
+      break if documents.nil? || documents.empty?
       
       # Now lets start the Iteration on the professors, this is going to be a lot of data
-      for professor in professors
-        professor_url = professor[:href]
-        professor_name = professor.content
+      for document in documents
+        document_url = document[:href]
+        document_name = document.content
+        
+        p document_url
       end # for professor in professors
     end # (1..1000).each do |page|
   end # universities.each do |university|
