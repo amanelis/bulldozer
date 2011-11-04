@@ -56,10 +56,22 @@ for state in states
       
       # Now lets start the Iteration on the professors, this is going to be a lot of data
       for document in documents
-        document_url = document[:href]
+        document_url = "http://www.koofers.com" + document[:href]
         document_name = document.content
         
-        p document_url
+        # Now we want to follow the link on the document page to grab the professor name
+        professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
+        if professor_document_data.nil?
+          p "Professor not found, fuck"
+        else
+          professor_document_data.each do |name|
+            professor_name = name.content
+            professor_url  = name[href]
+            p professor_name
+          end
+        end
+        
+        
       end # for professor in professors
     end # (1..1000).each do |page|
   end # universities.each do |university|
