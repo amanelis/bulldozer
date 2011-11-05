@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'nokogiri'
 require 'open-uri'
 require 'net/http'
@@ -17,7 +18,7 @@ class Professor < ActiveRecord::Base
 
     # TODO(CH) Pass in the user agent / proxy.
     document = Nokogiri::HTML(open(url), ua)
-    matches = document.at_css("#full_name").text.match /(.+) (.+)/
+    matches = document.at_css(".breadcrumbs_widget").content.match /».*».*» (.+) (.+)$/
     first_name = matches[1]
     last_name = matches[2]
 
@@ -34,7 +35,7 @@ class Professor < ActiveRecord::Base
         fragment = Nokogiri::HTML.fragment(result["Data"]["returnHTML"])
         rating = Float(fragment.css(".summary_info div div span")[0].content)
       end
-p    rescue Exception
+    rescue Exception
       p "[WARN] Failed to parse ratings for " + url
     end
 
