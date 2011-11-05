@@ -168,15 +168,15 @@ def scrape_exams_or_notes_page(url, university_obj, type, ua)
       end # for professor in professors
 
       path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
-      course_name = document_page.css('tr:nth-child(4) a')[0].content
+      course_name = document_page.css('tr:nth-child(3) a')[0].content
       document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path, :course_name => course_name, :type => type})
 
       professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
-      p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
+      p "Added document @ " + document_obj[:url] + " with professor: " + professor_name + " for course: " + course_name
       
     rescue Exception => e
-      p "Failed to scrape document: " + document.inspect
-      print e.backtrace.join("\n")
+      p "Failed to scrape document ~~~~~> " + document_url
+      print e.backtrace.first
       p e.inspect
     end
   end # for document in documents
