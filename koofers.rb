@@ -1,9 +1,10 @@
 require 'rubygems'
+require 'thread'
 require 'json'
+require 'uri'
+require 'open-uri'
 require 'nokogiri'
 require 'mechanize'
-require 'open-uri'
-require 'uri'
 require 'net/http'
 require 'yajl/http_stream'
 require 'active_record'
@@ -31,12 +32,10 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)',
            'Googlebot/2.1 ( http://www.googlebot.com/bot.html)',
            'Mozilla/2.0 (compatible; Ask Jeeves)',
-           'msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
+           'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
 # States array to limit calls to koofers           
-# states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA",
-#            "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
-#            "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
+states = State.all
 states = ["TX", "WY"]
 
 # Number of threads to have running at one time.
@@ -76,11 +75,14 @@ NUM_THREADS.times do
       begin
         university_url = queue.pop    
       rescue Exception
-        p "*******************************************************************************************************"
-        p "   " + university_url + " failed."
-        p "*******************************************************************************************************"
+        p "****************************************************************"
+        p "   FUCK" + university_url + " failed."
+        p "****************************************************************"
         break
       end
+      
+      puts "Processing #{university_url}"
+      puts "******************************************************************************************************"
 
       university_professors = university_url + "professors"
       university_exams      = university_url + "study-materials?exams"
@@ -116,12 +118,15 @@ NUM_THREADS.times do
             p "Professor not found, fuck"
           else
             # Here is where we want to do the professor check and create the document professor
-            # relation, store it in the database, and fuck koofers.
-            
+            # relation, store it in the database, and fuck koofers. 
             professor_document_data.each do |name|
               professor_name = name.content
               professor_url  = name[:href]
               p "       " + professor_name
+
+              
+              
+              
             end # professor_document_data.each do |name|
           end # for professor in professors
         end # for document in documents

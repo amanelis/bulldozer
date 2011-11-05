@@ -29,7 +29,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.integer :university_id
       t.string :first_name
       t.string :last_name
-      t.integer :rating
+      t.float :rating
       t.string :identifier
     end
   
