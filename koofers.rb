@@ -3,8 +3,19 @@ require 'json'
 require 'nokogiri'
 require 'mechanize'
 require 'open-uri'
-require 'net/http'
 require 'uri'
+require 'net/http'
+require 'yajl/http_stream'
+require 'active_record'
+
+# Connect to MySQL
+ActiveRecord::Base.establish_connection(
+  :adapter  => "mysql", 
+  :host     => "localhost", 
+  :username => "root", 
+  :password => "", 
+  :database => "koofers"
+)
 
 # Proxy ip addresses
 proxies = [{:ip => '128.143.6.130', :port => '3128'}]
@@ -18,7 +29,7 @@ agents  = ['Windows IE 6',
 # states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA",
 #            "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
 #            "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
-states = ["TX"]
+states = ["TX", "WY"]
 
 # Where we will store the threads in process
 # Data results so we can compare to thread output
@@ -66,12 +77,10 @@ for state in states
         else
           professor_document_data.each do |name|
             professor_name = name.content
-            professor_url  = name[href]
+            professor_url  = name[:href]
             p professor_name
           end
         end
-        
-        
       end # for professor in professors
     end # (1..1000).each do |page|
   end # universities.each do |university|
