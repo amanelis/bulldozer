@@ -114,8 +114,6 @@ NUM_THREADS.times do
         for document in documents
           document_url = "http://www.koofers.com" + document[:href]
           document_name = document.content
-          
-          p "   " + document_name
 
           # Now we want to follow the link on the document page to grab the professor name
           professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
@@ -124,15 +122,21 @@ NUM_THREADS.times do
           else
             # Here is where we want to do the professor check and create the document professor
             # relation, store it in the database, and fuck koofers. 
-            professor_document_data.each do |name|
-              professor_name = name.content
-              professor_url  = name[:href]
-              p "       " + professor_name
+            name = professor_document_data.first
+            
+            # Set professor variables
+            professor_name = name.content
+            professor_url  = name[:href]
+            p "       " + professor_name
 
-              # Lets parse this shit out and save dat hoe
-              professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
-              
-            end # professor_document_data.each do |name|
+            # Lets parse this shit out and save dat hoe
+            professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
+
+            
+            # Here is where we want to create the document
+            
+            
+            
           end # for professor in professors
         end # for document in documents
       end # (1..1000).each do |page|
