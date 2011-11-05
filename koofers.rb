@@ -7,15 +7,7 @@ require 'uri'
 require 'net/http'
 require 'yajl/http_stream'
 require 'active_record'
-
-# Connect to MySQL
-ActiveRecord::Base.establish_connection(
-  :adapter  => "mysql", 
-  :host     => "localhost", 
-  :username => "root", 
-  :password => "", 
-  :database => "koofers"
-)
+require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 
 # Proxy ip addresses
 proxies = [{:ip => '128.143.6.130', :port => '3128'}]

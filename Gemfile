@@ -1,6 +1,8 @@
 source "http://rubygems.org"
 
 gem "rails",        "3.1.1"
+gem "rack", "1.3.5"
+gem "rake"
 gem "sqlite3-ruby", "1.3.2", :require => "sqlite3"
 gem "aws-s3",       "0.6.2", :require => "aws/s3"
 gem "mysql",        "2.8.1"
