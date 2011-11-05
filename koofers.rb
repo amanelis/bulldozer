@@ -160,38 +160,6 @@ NUM_THREADS.times do
         rescue Exception
           p "Failed to scrape page: " + page.inspect
         end
-
-        # Now lets start the Iteration on the professors, this is going to be a lot of data
-        # So here we want to get each document, then follow through the professor link, check
-        # the database if professor exists, create the professor and insert the document.
-        for document in documents
-          document_url = "http://www.koofers.com" + document[:href]
-          document_name = document.content
-
-          # Now we want to follow the link on the document page to grab the professor name
-          professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
-          if professor_document_data.nil?
-            p "Professor not found, fuck"
-          else
-            # Here is where we want to do the professor check and create the document professor
-            # relation, store it in the database, and fuck koofers. 
-            name = professor_document_data.first
-            
-            # Set professor variables
-            professor_name = name.content
-            professor_url  = name[:href]
-            p "       " + professor_name
-
-            # Lets parse this shit out and save dat hoe
-            professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
-
-            
-            # Here is where we want to create the document
-            
-            
-            
-          end # for professor in professors
-        end # for document in documents
       end # (1..1000).each do |page|
     end # until queue.empty?
   end # threads << Thread.new do
