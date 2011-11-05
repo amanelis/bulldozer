@@ -20,63 +20,84 @@ agents  = ['Windows IE 6',
 #            "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
 states = ["TX"]
 
+# Number of threads to have running at one time.
+NUM_THREADS = 3
+
 # Where we will store the threads in process
 # Data results so we can compare to thread output
-threads, results = []
+threads, results = [], []
 
 # Create the Mechanize object for loggin in the user
 # Select a new user agent, and proxy each iteration
 ua = agents[rand(agents.length)]
 pr = proxies[rand(proxies.length)]
 
+queue = Queue.new
+
 # Iterate through the states
 for state in states
   puts "Processing #{state}-----------------------------------------------------------"
-  universites = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state}"), ua).css('.univ_list a')
+  universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state}"), ua).css('.univ_list a')
+
+  # Iterate through the professors
+  universities.each do |university|
+    queue << "http://www.koofers.com#{university[:href]}"
+    p university[:href]
+  end
+    
+end # for state in states
+
+NUM_THREADS.times do
+  threads << Thread.new do
+    until queue.empty?
+      begin
+        university_url = queue.pop    
+      rescue Exception
+        p university_url + " failed."
+        break;
+      end
   
-  # Iterate throught the professors
-  universites.each do |university|
-    university_url        = "http://www.koofers.com#{university[:href]}"
-    university_professors = university_url + "professors"
-    university_exams      = university_url + "study-materials?exams"
-
-    # Here is the big iteration on the Professors, could take a while
-    # Definitely need to thread these iterations out. We will try to paginate
-    # Through as many pages as possible.
-    (1..1000).each do |page|
-      documents_url = university_exams + "&p=#{page}"
-      
-      p documents_url
-
-      # Grab all the professors on each page
-      documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
-      
-      # Break if no professors on data
-      break if documents.nil? || documents.empty?
-      
-      # Now lets start the Iteration on the professors, this is going to be a lot of data
-      for document in documents
-        document_url = "http://www.koofers.com" + document[:href]
-        document_name = document.content
+      university_professors = university_url + "professors"
+      university_exams      = university_url + "study-materials?exams"
+    
+      # Here is the big iteration on the Professors, could take a while
+      # Definitely need to thread these iterations out. We will try to paginate
+      # Through as many pages as possible.
+      (1..1000).each do |page|
+        documents_url = university_exams + "&p=#{page}"
         
-        # Now we want to follow the link on the document page to grab the professor name
-        professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
-        if professor_document_data.nil?
-          p "Professor not found, fuck"
-        else
-          professor_document_data.each do |name|
+        p Thread.current.object_id.to_s + ": " + documents_url
+    
+        # Grab all the professors on each page
+        documents = []
+        # documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
+        
+        # Break if no professors on data
+        break if documents.nil? || documents.empty?
+        
+        # Now lets start the Iteration on the professors, this is going to be a lot of data
+        for document in documents
+          document_url = "http://www.koofers.com" + document[:href]
+          document_name = document.content
+          
+          # Now we want to follow the link on the document page to grab the professor name
+          professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
+          if professor_document_data.nil?
+            p "Professor not found, fuck"
+          else
+            professor_document_data.each do |name|
             professor_name = name.content
             professor_url  = name[href]
             p professor_name
           end
         end
-        
-        
       end # for professor in professors
     end # (1..1000).each do |page|
   end # universities.each do |university|
-end # for state in states
+end
+end  
 
-
-
-
+for t in threads
+  t.join
+end
+p "finished"
