@@ -30,7 +30,7 @@ class Professor < ActiveRecord::Base
       rating = Float(fragment.css(".summary_info div div span")[0].content)
     end
     
-    Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university => university})
+    Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university_id => university.id})
   end
 
 end

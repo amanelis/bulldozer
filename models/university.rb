@@ -13,7 +13,7 @@ class University < ActiveRecord::Base
     document = Nokogiri::HTML(open(url), ua)
     name = document.css(".header_container .pale_text")[0].content
 
-    University.create!({:name => name, :slug => slug, :state => state})
+    University.create!({:name => name, :slug => slug, :state_id => state.id})
   end
 
 end

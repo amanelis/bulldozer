@@ -34,9 +34,10 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Mozilla/2.0 (compatible; Ask Jeeves)',
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
-# States array to limit calls to koofers           
-states = State.all
-states = ["TX", "WY"]
+# States array to limit calls to koofers  
+states = []         
+states << State.find_by_abbv('TX')
+states << State.find_by_abbv('AL')
 
 # Number of threads to have running at one time.
 NUM_THREADS = 3
@@ -53,7 +54,7 @@ queue = Queue.new
 
 # Scrape the given page of listed documents.
 def scrape_document_page(page, university_obj, ua)
-  documents_url = university_exams + "&p=#{page}"
+  documents_url = "http://www.koofers.com/#{university_obj.slug}/&p=#{page}"
 
   # p Thread.current.object_id.to_s + ": " + documents_url
 
@@ -71,8 +72,9 @@ def scrape_document_page(page, university_obj, ua)
   for document in documents
     begin
       scrape_document(document, university_obj, ua);
-    rescue Exception
+    rescue Exception => e
       p "Failed to scrape document: " + document.inspect
+      p e.inspect
     end
   end # for document in documents
 end
@@ -84,6 +86,8 @@ def scrape_document(document, university_obj, ua)
   document_name = document.content
   
   p "   " + document_name
+  
+  professor_obj = nil
 
   # Now we want to follow the link on the document page to grab the professor name
   professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
@@ -103,7 +107,8 @@ def scrape_document(document, university_obj, ua)
     end # professor_document_data.each do |name|
   end # for professor in professors
 
-  document_obj = Document.create!({:university => university_obj, :professor => professor_obj, :url => document_url})
+  path = "#{university_obj.slug}/#{professor_obj.identifier}/"
+  document_obj = Document.create!({:university_id => university_obj.id, :professor_id => professor_obj.id, :url => document_url, :path => path})
 end
 
 
@@ -114,8 +119,9 @@ end
 puts "Starting the queue process..."
 # Iterate through the states
 for state in states
+  ua = agents[rand(agents.length)]
   puts "Processing #{state}-----------------------------------------------------------"
-  universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state}"), ua).css('.univ_list a')
+  universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state.abbv}"), ua).css('.univ_list a')
 
   # Iterate through the professors
   universities.each do |university|
@@ -140,18 +146,15 @@ NUM_THREADS.times do
         # Right here lets create a university
         university_obj = University.create_from_url(university_url, state, ua)
             
-      rescue Exception
+      rescue Exception => e
         p "****************************************************************"
-        p "   FUCK" + university_url + " failed."
+        p "   FUCK" + university_url + " failed: " + e
         p "****************************************************************"
         next;
       end
       
       puts "Processing #{university_url}"
       puts "******************************************************************************************************"
-
-      university_professors = university_url + "professors"
-      university_exams      = university_url + "study-materials?exams"
 
       # Here is the big iteration on the Professors, could take a while
       # Definitely need to thread these iterations out. We will try to paginate
