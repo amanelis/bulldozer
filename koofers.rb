@@ -50,55 +50,6 @@ total_documents = total_professors = total_universities = 0
 # Start a queue to stare universities
 queue = Queue.new
 
-# Scrapes the given document page.
-def scrape_document(document, university_obj, ua)
-  document_url = "http://www.koofers.com" + document[:href]
-  document_name = document.content
-  
-  # Now we want to follow the link on the document page to grab the professor name
-  professor_document = Nokogiri::HTML(open(document_url))
-  professor_link = professor_document.css('tr:nth-child(2) a')[0];
-  isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
-
-  professor_obj = nil
-
-  if isStaff
-    # Do nothing.
-  elsif professor_link.nil?
-    p "[ERROR] Couldn't parse professors @ " + document_url
-  else
-    # Here is where we want to do the professor check and create the document professor
-    # relation, store it in the database, and fuck koofers. 
-    professor_url  = "http://www.koofers.com" + professor_link[:href]
-
-    # Lets parse this shit out and save dat hoe
-    professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
-  end # for professor in professors
-
-  path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
-  document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
-  
-  professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
-  p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
-end
-
-
-# Scrape the given page of listed documents.
-def scrape_document_page(documents, university_obj, ua)
-  # Now lets start the Iteration on the professors, this is going to be a lot of data
-  # So here we want to get each document, then follow through the professor link, check
-  # the database if professor exists, create the professor and insert the document.
-  for document in documents
-    begin
-      scrape_document(document, university_obj, ua);
-    rescue Exception => e
-      p "Failed to scrape document: " + document.inspect
-      print e.backtrace.join("\n")
-      p e.inspect
-    end
-  end # for document in documents
-end
-
 ###################################
 # Let the scrapage begin.
 ###################################
@@ -138,8 +89,7 @@ NUM_THREADS.times do
         p "   FUCK" + university_url + " failed: " + e.inspect
         p "****************************************************************"
         print e.backtrace.join("\n")
-        p e.inspect
-        next;
+        next
       end
       
       puts "Processing #{university_url} [" + Document.all.count.to_s + " docs]"
@@ -162,7 +112,43 @@ NUM_THREADS.times do
             break
           end
           
-          scrape_document_page(documents, university_obj, ua)
+          for document in documents
+            begin
+              document_url = "http://www.koofers.com" + document[:href]
+              document_name = document.content
+
+              # Now we want to follow the link on the document page to grab the professor name
+              professor_document = Nokogiri::HTML(open(document_url))
+              professor_link = professor_document.css('tr:nth-child(2) a')[0];
+              isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
+
+              professor_obj = nil
+
+              if isStaff
+                # Do nothing.
+              elsif professor_link.nil?
+                p "[ERROR] Couldn't parse professors @ " + document_url
+              else
+                # Here is where we want to do the professor check and create the document professor
+                # relation, store it in the database, and fuck koofers. 
+                professor_url  = "http://www.koofers.com" + professor_link[:href]
+
+                # Lets parse this shit out and save dat hoe
+                professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
+              end # for professor in professors
+
+              path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
+              document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
+
+              professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
+              p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
+              
+            rescue Exception => e
+              p "Failed to scrape document: " + document.inspect
+              print e.backtrace.join("\n")
+              p e.inspect
+            end
+          end # for document in documents
         rescue Exception => e
           p "Failed to scrape page: " + documents_url
           p e.inspect
