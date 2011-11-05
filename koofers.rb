@@ -15,6 +15,7 @@ require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
 
+execution_start = Time.now
 puts "Scrape::Koofers - All dependencies loaded"
 puts "-----------------------------------------------------------------------------------"
 
@@ -162,6 +163,10 @@ NUM_THREADS.times do
 end # NUM_THREADS
 
 threads.collect { |t| t.join }
-p "finished"
+execution_finished = (Time.now - execution_start)
+puts "Completed in #{execution_finished} -----------------------------------------"
+puts "Total Documents: #{Document.all.count}"
+puts "Total Professors: #{Professor.all.count}"
+puts "Total Universities: #{University.all.count}"
 
 
