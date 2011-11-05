@@ -8,7 +8,7 @@ require 'net/http'
 require 'yajl/http_stream'
 require 'active_record'
 
-ActiveRecord::Base.establish_connection(
+connection = ActiveRecord::Base.establish_connection(
   :adapter  => "mysql", 
   :host     => "localhost", 
   :username => "root", 
@@ -16,26 +16,41 @@ ActiveRecord::Base.establish_connection(
   :database => "koofers"
 )
 
-class CreateTables < ActiveRecord::Migration
-  create_table :documents do |t|
-    t.integer :university_id
-    t.integer :professor_id
-  end
+ActiveRecord::Base.connection.create_database(:koofers) unless connection
+
+unless ActiveRecord::Base.connection.table_exists?(:documents)
+  class CreateTables < ActiveRecord::Migration
+    create_table :documents do |t|
+      t.integer :university_id
+      t.integer :professor_id
+    end
   
-  create_table :professors do |t|
-    t.integer :university_id
-    t.string :first_name
-    t.string :last_name
-    t.integer :rating
-    t.string :identifier
-  end
+    create_table :professors do |t|
+      t.integer :university_id
+      t.string :first_name
+      t.string :last_name
+      t.integer :rating
+      t.string :identifier
+    end
   
-  create_table :states do |t|
-    t.string :abbv
-  end
+    create_table :states do |t|
+      t.string :abbv
+    end
   
-  create_table :universities do |t|
-    t.string :name
-    t.integer :state_id
+    create_table :universities do |t|
+      t.string :name
+      t.integer :state_id
+    end
   end
+end
+
+states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA",
+           "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
+           "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
+
+class State < ActiveRecord::Base  
+end
+
+for state in states
+  State.create!(:abbv => state)
 end
