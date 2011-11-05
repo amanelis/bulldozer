@@ -144,9 +144,9 @@ def scrape_exams_or_notes_page(url, university_obj, ua)
       document_name = document.content
 
       # Now we want to follow the link on the document page to grab the professor name
-      professor_document = Nokogiri::HTML(open(document_url))
-      professor_link = professor_document.css('tr:nth-child(2) a')[0];
-      isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
+      document_page = Nokogiri::HTML(open(document_url))
+      professor_link = document_page.css('tr:nth-child(2) a')[0];
+      isStaff = document_page.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
 
       professor_obj = nil
 
@@ -168,7 +168,8 @@ def scrape_exams_or_notes_page(url, university_obj, ua)
       end # for professor in professors
 
       path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
-      document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
+      course_name = document_page.css('tr:nth-child(4) a')[0].content
+      document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path, :course_name => course_name})
 
       professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
       p "Added document @ " + document_obj[:url] + " with professor: " + professor_name

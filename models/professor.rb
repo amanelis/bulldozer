@@ -21,6 +21,9 @@ class Professor < ActiveRecord::Base
     first_name = matches[1]
     last_name = matches[2]
 
+    dept_matches = document.at_css('#job_summary').text.match /\r\n(.+)\r\n\t+$/
+    dept = dept_matches[1].strip
+
     # Get the rating.
     rating = nil
     uri = URI.parse(url)
@@ -31,11 +34,11 @@ class Professor < ActiveRecord::Base
         fragment = Nokogiri::HTML.fragment(result["Data"]["returnHTML"])
         rating = Float(fragment.css(".summary_info div div span")[0].content)
       end
-    rescue Exception
+p    rescue Exception
       p "[WARN] Failed to parse ratings for " + url
     end
 
-    prof = Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university_id => university.id, :url => url})
+    prof = Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university_id => university.id, :url => url, :department_name => dept})
     prof
   end
 
