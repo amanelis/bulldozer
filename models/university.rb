@@ -16,7 +16,7 @@ class University < ActiveRecord::Base
 
     name = stateSchool.nil? ? otherSchool.content : stateSchool.content
 
-    University.create!({:name => name, :slug => slug, :state_id => state.id})
+    University.create!({:name => name, :slug => slug, :state_id => state.id, :url => url})
   end
 
 end

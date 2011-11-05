@@ -35,7 +35,7 @@ class Professor < ActiveRecord::Base
       p "[WARN] Failed to parse ratings for " + url
     end
 
-    prof = Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university_id => university.id})
+    prof = Professor.create!({:identifier => identifier, :first_name => first_name, :last_name => last_name, :rating => rating, :university_id => university.id, :url => url})
     prof
   end
 
