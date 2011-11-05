@@ -167,9 +167,4 @@ module Crocodoc
   end
 end
 
-yay = 0
-50000000.times do
-  yay += 1
-end
-
 puts "Duration: #{Time.now - execution_start} seconds"
