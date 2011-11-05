@@ -3,8 +3,11 @@ require 'json'
 require 'nokogiri'
 require 'mechanize'
 require 'open-uri'
-require 'net/http'
 require 'uri'
+require 'net/http'
+require 'yajl/http_stream'
+require 'active_record'
+require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 
 # Proxy ip addresses
 proxies = [{:ip => '128.143.6.130', :port => '3128'}]
@@ -18,7 +21,7 @@ agents  = ['Windows IE 6',
 # states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA",
 #            "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
 #            "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
-states = ["TX"]
+states = ["TX", "WY"]
 
 # Number of threads to have running at one time.
 NUM_THREADS = 3
@@ -87,7 +90,7 @@ NUM_THREADS.times do
           else
             professor_document_data.each do |name|
             professor_name = name.content
-            professor_url  = name[href]
+            professor_url  = name[:href]
             p professor_name
           end
         end
