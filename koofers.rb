@@ -35,7 +35,7 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
 # States array to limit calls to koofers  
-states = [State.all.first]
+states = State.all
 
 # Number of threads to have running at one time.
 NUM_THREADS = 20
