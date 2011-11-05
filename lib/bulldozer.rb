@@ -13,11 +13,7 @@ module Bulldozer
   class Client  
     def initialize(*args)
       options = args.extract_options!
-    end
-    
-    def method_missing(sym, *args, &block)
-      options = args.extract_options!
-      args.nil? ? "" : "" 
+      @already_visited = {}
     end
   end
   
