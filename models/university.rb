@@ -6,8 +6,8 @@ class University < ActiveRecord::Base
     slug = url.match(/com\/(.+)\//)[1]
 
     # Ensure the slug is unique before scraping the page.
-    university_slugs = University.all(&:slug)
-    return if university_slugs.include? slug
+    existing = University.find_by_slug(slug)
+    return existing unless existing.nil?
 
     # Find the name of the university.
     document = Nokogiri::HTML(open(url), ua)
