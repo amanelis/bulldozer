@@ -42,10 +42,7 @@ NUM_THREADS = 20
 
 # Where we will store the threads in process
 # Data results so we can compare to thread output
-threads = results = []
-
-# Keep track of data we iterate through
-total_documents = total_professors = total_universities = 0
+threads = []
 
 # Start a queue to stare universities
 queue = Queue.new
@@ -54,112 +51,135 @@ queue = Queue.new
 # Let the scrapage begin.
 ###################################
 
-puts "Starting the queue process..."
-# Iterate through the states
-for state in states
-  ua = agents[rand(agents.length)]
-  puts "Processing #{state.abbv}-----------------------------------------------------------"
-  universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state.abbv}"), ua).css('.univ_list a')
+# Add all Universities to the queue for consumption by threads.
+def queue_universities
+  puts "Starting the queue process..."
+  # Iterate through the states
+  for state in states
+    ua = agents[rand(agents.length)]
+    puts "Processing #{state.abbv}-----------------------------------------------------------"
+    universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state.abbv}"), ua).css('.univ_list a')
+  
+    # Iterate through the professors
+    universities.each do |university|
+      queue << {:university_url => "http://www.koofers.com#{university[:href]}", :state => state}
+      puts "    queuing: #{university.content}"
+    end
+  end # for state in states
+  puts "All Universites have been queued: #{queue.length}"
+end
 
-  # Iterate through the professors
-  universities.each do |university|
-    queue << {:university_url => "http://www.koofers.com#{university[:href]}", :state => state}
-    puts "    queuing: #{university.content}"
-  end
-end # for state in states
-
-puts "All Universites have been queued: #{queue.length}"
-
-NUM_THREADS.times do
-  # Create the Mechanize object for loggin in the user
-  # Select a new user agent, and proxy each iteration
-  ua = agents[rand(agents.length)]
-  pr = proxies[rand(proxies.length)]
-   
-  threads << Thread.new(ua) do |ua|
-    until queue.empty?
-      begin
-        data = queue.pop
-        university_url = data[:university_url]
-        state_obj = data[:state]
-        
-        # Right here lets create a university
-        university_obj = University.create_from_url(university_url, state_obj, ua)
-            
-      rescue Exception => e
-        p "****************************************************************"
-        p "   FUCK" + university_url + " failed: " + e.inspect
-        p "****************************************************************"
-        print e.backtrace.join("\n")
-        next
-      end
-      
-      puts "Processing #{university_url} [" + Document.all.count.to_s + " docs]"
-      puts "******************************************************************************************************"
-
-      # Here is the big iteration on the Professors, could take a while
-      # Definitely need to thread these iterations out. We will try to paginate
-      # Through as many pages as possible.
-      (1..1000).each do |page|
+# Starts threads which will grab universities from the queue.
+def start_threads
+  NUM_THREADS.times do
+    # Create the Mechanize object for login in the user.
+    # Select a new user agent, and proxy each iteration.
+    ua = agents[rand(agents.length)]
+    pr = proxies[rand(proxies.length)]
+     
+    threads << Thread.new(ua) do |ua|
+      until queue.empty?
         begin
-          documents_url = university_url + "study-materials?exams&p=#{page}"
-          notes_url = university_url + "study-materials?notes&p=#{page}"
-
-          # p Thread.current.object_id.to_s + ": " + documents_url
-
-          # Grab all the professors on each page
-          documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
-
-          # Break if no docuemnet on data
-          if documents.nil? || documents.empty? 
-            break
-          end
+          data = queue.pop
+          university_url = data[:university_url]
+          state_obj = data[:state]
           
-          for document in documents
-            begin
-              document_url = "http://www.koofers.com" + document[:href]
-              document_name = document.content
-
-              # Now we want to follow the link on the document page to grab the professor name
-              professor_document = Nokogiri::HTML(open(document_url))
-              professor_link = professor_document.css('tr:nth-child(2) a')[0];
-              isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
-
-              professor_obj = nil
-
-              if isStaff
-                # Do nothing.
-              elsif professor_link.nil?
-                p "[ERROR] Couldn't parse professors @ " + document_url
-              else
-                # Here is where we want to do the professor check and create the document professor
-                # relation, store it in the database, and fuck koofers. 
-                professor_url  = "http://www.koofers.com" + professor_link[:href]
-
-                # Lets parse this shit out and save dat hoe
-                professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
-              end # for professor in professors
-
-              path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
-              document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
-
-              professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
-              p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
+          # Right here lets create a university
+          university_obj = University.create_from_url(university_url, state_obj, ua)
               
-            rescue Exception => e
-              p "Failed to scrape document: " + document.inspect
-              print e.backtrace.join("\n")
-              p e.inspect
-            end
-          end # for document in documents
         rescue Exception => e
-          p "Failed to scrape page: " + documents_url
-          p e.inspect
+          p "****************************************************************"
+          p "[FUCK] " + university_url + " failed: " + e.inspect
+          p "****************************************************************"
+          print e.backtrace.join("\n")
+          next
         end
-      end # (1..1000).each do |page|
-    end # until queue.empty?
-  end # threads << Thread.new do
-end # NUM_THREADS
+        
+        puts "Processing #{university_url} [" + Document.all.count.to_s + " docs]"
+        puts "******************************************************************************************************"
+  
+        # Iterate through the paginated exam pages.
+        (1..1000).each do |page|
+          begin
+            # Perform the exams page scrape.
+            exams_url = university_url + "study-materials?exams&p=#{page}"
+            break unless scrape_exams_or_notes_page(exams_url, ua)
+
+          rescue Exception => e
+            p "Failed to scrape exams page: " + exams_url
+            p e.inspect
+          end
+        end # (1..1000).each do |page|
+  
+        # Iterate through the paginated notes pages.
+        (1..1000).each do |page|
+          begin
+            # Perform the notes page scrape.
+            notes_url = university_url + "study-materials?notes&p=#{page}"
+            break unless scrape_exams_or_notes_page(notes_url, ua)
+
+          rescue Exception => e
+            p "Failed to scrape notes page: " + url
+            p e.inspect
+          end
+        end # (1..1000).each do |page|
+
+      end # until queue.empty?
+    end # threads << Thread.new do
+  end # NUM_THREADS
+end
+
+def scrape_exams_or_notes_page(url, ua)
+  # Grab all the professors on each page
+  documents = Nokogiri::HTML(open(url), ua).css('.title a')
+
+  # Break if no docuemnet on data
+  if documents.nil? || documents.empty? 
+    return false
+  end
+  
+  for document in documents
+    begin
+      document_url = "http://www.koofers.com" + document[:href]
+      document_name = document.content
+
+      # Now we want to follow the link on the document page to grab the professor name
+      professor_document = Nokogiri::HTML(open(document_url))
+      professor_link = professor_document.css('tr:nth-child(2) a')[0];
+      isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
+
+      professor_obj = nil
+
+      if isStaff
+        # Do nothing.
+      elsif professor_link.nil?
+        p "[ERROR] Couldn't parse professors @ " + document_url
+      else
+        # Here is where we want to do the professor check and create the document professor
+        # relation, store it in the database, and fuck koofers. 
+        professor_url  = "http://www.koofers.com" + professor_link[:href]
+
+        # Lets parse this shit out and save dat hoe
+        professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
+      end # for professor in professors
+
+      path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
+      document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
+
+      professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
+      p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
+      
+    rescue Exception => e
+      p "Failed to scrape document: " + document.inspect
+      print e.backtrace.join("\n")
+      p e.inspect
+    end
+  end # for document in documents
+  true
+end
+
+queue_universities
+start_threads
 
 threads.collect { |t| t.join }
 p "finished"
