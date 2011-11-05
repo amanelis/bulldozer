@@ -16,6 +16,8 @@ require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
 
+execution_start = Time.now
+
 koof_url = 'http://www.koofers.com/files/exam-h4iimxm93x/koofer.pdf'
 api_uri  = URI.parse("http://crocodoc.com/api/v1/document/upload?url=#{koof_url}&token=SsrZniG7p0QxRCYvAhfg")
 
@@ -165,6 +167,9 @@ module Crocodoc
   end
 end
 
-# obj = Crocodoc.upload(koof_url)
+yay = 0
+50000000.times do
+  yay += 1
+end
 
-p Crocodoc.status("6a745caf-68bb-42a5-84f0-29c68fc48348")
+puts "Duration: #{Time.now - execution_start} seconds"

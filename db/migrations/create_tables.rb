@@ -30,6 +30,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.integer :professor_id
       t.string :url
       t.string :path
+      t.string :type
     end
   
     create_table :professors do |t|

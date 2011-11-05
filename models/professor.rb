@@ -6,6 +6,7 @@ require 'uri'
 class Professor < ActiveRecord::Base  
   belongs_to :university
   has_many :documents
+  has_one :department
 
   # Creates a Professor model from the given Koofers professor URL.
   def self.create_from_url(url, university, ua)
