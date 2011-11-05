@@ -16,7 +16,6 @@ class Professor < ActiveRecord::Base
     existing = Professor.find_by_identifier(identifier)
     return existing unless existing.nil?
 
-    # TODO(CH) Pass in the user agent / proxy.
     document = Nokogiri::HTML(open(url), ua)
     matches = document.at_css(".breadcrumbs_widget").content.match /».*».*» (.+)? (.+)$/
     first_name = matches[1]
