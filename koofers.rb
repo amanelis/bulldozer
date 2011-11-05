@@ -51,6 +51,64 @@ total_documents = total_professors = total_universities = 0
 # Start a queue to stare universities
 queue = Queue.new
 
+# Scrape the given page of listed documents.
+def scrape_document_page(page, university_obj, ua)
+  documents_url = university_exams + "&p=#{page}"
+
+  # p Thread.current.object_id.to_s + ": " + documents_url
+
+  # Grab all the professors on each page
+  documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
+
+  # Break if no professors on data
+  if documents.nil? || documents.empty? 
+    return
+  end
+
+  # Now lets start the Iteration on the professors, this is going to be a lot of data
+  # So here we want to get each document, then follow through the professor link, check
+  # the database if professor exists, create the professor and insert the document.
+  for document in documents
+    begin
+      scrape_document(document, university_obj, ua);
+    rescue Exception
+      p "Failed to scrape document: " + document.inspect
+    end
+  end # for document in documents
+end
+
+
+# Scrapes the given document page.
+def scrape_document(document, university_obj, ua)
+  document_url = "http://www.koofers.com" + document[:href]
+  document_name = document.content
+  
+  p "   " + document_name
+
+  # Now we want to follow the link on the document page to grab the professor name
+  professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
+  if professor_document_data.nil?
+    p "Professor not found, fuck"
+  else
+    # Here is where we want to do the professor check and create the document professor
+    # relation, store it in the database, and fuck koofers. 
+    professor_document_data.each do |name|
+      professor_name = name.content
+      professor_url  = name[:href]
+      p "       " + professor_name
+
+      # Lets parse this shit out and save dat hoe
+      professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
+      
+    end # professor_document_data.each do |name|
+  end # for professor in professors
+end
+
+
+###################################
+# Let the scrapage begin.
+###################################
+
 puts "Starting the queue process..."
 # Iterate through the states
 for state in states
@@ -63,6 +121,7 @@ for state in states
     puts "    queuing: #{university.content}"
   end
 end # for state in states
+
 puts "All Universites have been queued: #{queue.length}"
 
 NUM_THREADS.times do
@@ -77,13 +136,13 @@ NUM_THREADS.times do
         university_url = queue.pop
         
         # Right here lets create a university
-        university_obj = University.create_from_url(university_url, state)
+        university_obj = University.create_from_url(university_url, state, ua)
             
       rescue Exception
         p "****************************************************************"
         p "   FUCK" + university_url + " failed."
         p "****************************************************************"
-        break
+        next;
       end
       
       puts "Processing #{university_url}"
@@ -96,17 +155,12 @@ NUM_THREADS.times do
       # Definitely need to thread these iterations out. We will try to paginate
       # Through as many pages as possible.
       (1..1000).each do |page|
-        documents_url = university_exams + "&p=#{page}"
-
-        # p Thread.current.object_id.to_s + ": " + documents_url
-
-        # Grab all the professors on each page
-        documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
-
-        # Break if no professors on data
-        if documents.nil? || documents.empty? 
-          break
+        begin
+          scrape_document_page(page, university_obj, ua)
+        rescue Exception
+          p "Failed to scrape page: " + page.inspect
         end
+<<<<<<< HEAD
 
         # Now lets start the Iteration on the professors, this is going to be a lot of data
         # So here we want to get each document, then follow through the professor link, check
@@ -139,11 +193,12 @@ NUM_THREADS.times do
             
           end # for professor in professors
         end # for document in documents
+=======
+>>>>>>> 127646638e79b2ce5031aebb481c43d64a1bdc8a
       end # (1..1000).each do |page|
     end # until queue.empty?
   end # threads << Thread.new do
 end # NUM_THREADS
-
 
 threads.collect { |t| t.join }
 p "finished"

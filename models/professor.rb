@@ -11,8 +11,8 @@ class Professor < ActiveRecord::Base
   def self.create_from_url(url, university, ua)
     identifier = Integer(url.match(/-(\d+)\/$/)[1])
 
-    professor_identifiers = Professor.all(&:identifier)
-    return if professor_identifiers.include? identifier
+    existing = Professor.find_by_identifier(identifier)
+    return existing unless existing.nil?
 
     # TODO(CH) Pass in the user agent / proxy.
     document = Nokogiri::HTML(open(url), ua)
