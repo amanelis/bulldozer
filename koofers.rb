@@ -35,10 +35,10 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
 # States array to limit calls to koofers  
-states = State.all
+states = [State.all.first]
 
 # Number of threads to have running at one time.
-NUM_THREADS = 5
+NUM_THREADS = 20
 
 # Where we will store the threads in process
 # Data results so we can compare to thread output
@@ -142,7 +142,7 @@ NUM_THREADS.times do
         next;
       end
       
-      puts "Processing #{university_url}"
+      puts "Processing #{university_url} [" + Document.all.count.to_s + " docs]"
       puts "******************************************************************************************************"
 
       # Here is the big iteration on the Professors, could take a while
