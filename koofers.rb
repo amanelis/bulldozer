@@ -102,6 +102,8 @@ def scrape_document(document, university_obj, ua)
       
     end # professor_document_data.each do |name|
   end # for professor in professors
+
+  document_obj = Document.create!({:university => university_obj, :professor => professor_obj, :url => document_url})
 end
 
 
