@@ -63,7 +63,7 @@ for state in states
 
   # Iterate through the professors
   universities.each do |university|
-    queue << "http://www.koofers.com#{university[:href]}"
+    queue << {:university_url => "http://www.koofers.com#{university[:href]}", :state => state}
     puts "    queuing: #{university.content}"
   end
 end # for state in states
@@ -79,10 +79,12 @@ NUM_THREADS.times do
   threads << Thread.new(ua) do |ua|
     until queue.empty?
       begin
-        university_url = queue.pop
+        data = queue.pop
+        university_url = data[:university_url]
+        state_obj = data[:state]
         
         # Right here lets create a university
-        university_obj = University.create_from_url(university_url, state, ua)
+        university_obj = University.create_from_url(university_url, state_obj, ua)
             
       rescue Exception => e
         p "****************************************************************"
