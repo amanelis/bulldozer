@@ -20,11 +20,6 @@ ActiveRecord::Base.connection.create_database(:koofers) unless connection
 
 unless ActiveRecord::Base.connection.table_exists?(:documents)
   class CreateTables < ActiveRecord::Migration
-    create_table :departments do |t|
-      t.string :name
-      t.string :slug
-    end
-    
     create_table :documents do |t|
       t.integer :university_id
       t.integer :professor_id
@@ -36,7 +31,6 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
   
     create_table :professors do |t|
       t.integer :university_id
-      t.interger :department_id
       t.string :first_name
       t.string :last_name
       t.float :rating

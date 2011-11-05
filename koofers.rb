@@ -102,7 +102,7 @@ def start_threads(queue)
           begin
             # Perform the exams page scrape.
             exams_url = university_url + "study-materials?exams&p=#{page}"
-            break unless scrape_exams_or_notes_page(exams_url, university_obj, ua)
+            break unless scrape_exams_or_notes_page(exams_url, university_obj, "exam", ua)
 
           rescue Exception => e
             p "Failed to scrape exams page: " + exams_url
@@ -115,7 +115,7 @@ def start_threads(queue)
           begin
             # Perform the notes page scrape.
             notes_url = university_url + "study-materials?notes&p=#{page}"
-            break unless scrape_exams_or_notes_page(notes_url, university_obj, ua)
+            break unless scrape_exams_or_notes_page(notes_url, university_obj, "notes", ua)
 
           rescue Exception => e
             p "Failed to scrape notes page: " + url
@@ -129,7 +129,7 @@ def start_threads(queue)
   threads
 end
 
-def scrape_exams_or_notes_page(url, university_obj, ua)
+def scrape_exams_or_notes_page(url, university_obj, type, ua)
   # Grab all the professors on each page
   documents = Nokogiri::HTML(open(url), ua).css('.title a')
 
@@ -169,7 +169,7 @@ def scrape_exams_or_notes_page(url, university_obj, ua)
 
       path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
       course_name = document_page.css('tr:nth-child(4) a')[0].content
-      document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path, :course_name => course_name})
+      document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path, :course_name => course_name, :type => type})
 
       professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
       p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
