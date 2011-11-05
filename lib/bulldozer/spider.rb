@@ -12,9 +12,9 @@ require 'url_utils'
 class Spider < Client
   include UrlUtils
   
-  def initialize
-    @already_visited = {}
-  end
+  # def initialize
+  #   @already_visited = {}
+  # end
 
   def crawl_web(urls, depth=2, page_limit = 100)
     depth.times do
