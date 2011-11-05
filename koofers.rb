@@ -48,11 +48,7 @@ threads = results = []
 # Keep track of data we iterate through
 total_documents = total_professors = total_universities = 0
 
-# Create the Mechanize object for loggin in the user
-# Select a new user agent, and proxy each iteration
-ua = agents[rand(agents.length)]
-pr = proxies[rand(proxies.length)]
-
+# Start a queue to stare universities
 queue = Queue.new
 
 puts "Starting the queue process..."
@@ -70,10 +66,19 @@ end # for state in states
 puts "All Universites have been queued: #{queue.length}"
 
 NUM_THREADS.times do
-  threads << Thread.new do
+  # Create the Mechanize object for loggin in the user
+  # Select a new user agent, and proxy each iteration
+  ua = agents[rand(agents.length)]
+  pr = proxies[rand(proxies.length)]
+   
+  threads << Thread.new(ua) do |ua|
     until queue.empty?
       begin
-        university_url = queue.pop    
+        university_url = queue.pop
+        
+        # Right here lets create a university
+        university = University.create_from_url(university_url)
+            
       rescue Exception
         p "****************************************************************"
         p "   FUCK" + university_url + " failed."
@@ -124,8 +129,8 @@ NUM_THREADS.times do
               professor_url  = name[:href]
               p "       " + professor_name
 
-              
-              
+              # Lets parse this shit out and save dat hoe
+              Professor.create_from_url(profess_url, university, ua)
               
             end # professor_document_data.each do |name|
           end # for professor in professors
