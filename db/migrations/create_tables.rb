@@ -41,6 +41,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.float :rating
       t.integer :identifier
       t.string :department_name
+      t.string :url
     end
   
     create_table :states do |t|
@@ -51,6 +52,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.string :name
       t.string :slug
       t.integer :state_id
+      t.string :url
     end
   end
 end
