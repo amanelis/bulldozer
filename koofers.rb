@@ -20,10 +20,10 @@ puts "Scrape::Koofers - All dependencies loaded"
 puts "-----------------------------------------------------------------------------------"
 
 # Proxy ip addresses
-proxies = [{:ip => '128.143.6.130', :port => '3128'}]
+$PROXIES = [{:ip => '128.143.6.130', :port => '3128'}]
 
 # User agents list
-agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6',
+$AGENTS  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6',
            'Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.84 Safari/534.13',
            'Mozilla/5.0 (X11; U; CrOS i686 0.9.128; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.341 Safari/534.10',
            'Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)',
@@ -35,29 +35,22 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Mozilla/2.0 (compatible; Ask Jeeves)',
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
-# States array to limit calls to koofers  
-states = State.all
-
 # Number of threads to have running at one time.
-NUM_THREADS = 20
-
-# Where we will store the threads in process
-# Data results so we can compare to thread output
-threads = []
-
-# Start a queue to stare universities
-queue = Queue.new
+$NUM_THREADS = 20
 
 ###################################
 # Let the scrapage begin.
 ###################################
 
 # Add all Universities to the queue for consumption by threads.
-def queue_universities
+def queue_universities(states)
+  # Start a queue to stare universities
+  queue = Queue.new
+
   puts "Starting the queue process..."
   # Iterate through the states
   for state in states
-    ua = agents[rand(agents.length)]
+    ua = $AGENTS[rand($AGENTS.length)]
     puts "Processing #{state.abbv}-----------------------------------------------------------"
     universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state.abbv}"), ua).css('.univ_list a')
   
@@ -68,15 +61,20 @@ def queue_universities
     end
   end # for state in states
   puts "All Universites have been queued: #{queue.length}"
+  queue
 end
 
 # Starts threads which will grab universities from the queue.
-def start_threads
-  NUM_THREADS.times do
+def start_threads(queue)
+  # Where we will store the threads in process
+  # Data results so we can compare to thread output
+  threads = []
+
+  $NUM_THREADS.times do
     # Create the Mechanize object for login in the user.
     # Select a new user agent, and proxy each iteration.
-    ua = agents[rand(agents.length)]
-    pr = proxies[rand(proxies.length)]
+    ua = $AGENTS[rand($AGENTS.length)]
+    pr = $PROXIES[rand($PROXIES.length)]
      
     threads << Thread.new(ua) do |ua|
       until queue.empty?
@@ -104,7 +102,7 @@ def start_threads
           begin
             # Perform the exams page scrape.
             exams_url = university_url + "study-materials?exams&p=#{page}"
-            break unless scrape_exams_or_notes_page(exams_url, ua)
+            break unless scrape_exams_or_notes_page(exams_url, university_obj, ua)
 
           rescue Exception => e
             p "Failed to scrape exams page: " + exams_url
@@ -117,7 +115,7 @@ def start_threads
           begin
             # Perform the notes page scrape.
             notes_url = university_url + "study-materials?notes&p=#{page}"
-            break unless scrape_exams_or_notes_page(notes_url, ua)
+            break unless scrape_exams_or_notes_page(notes_url, university_obj, ua)
 
           rescue Exception => e
             p "Failed to scrape notes page: " + url
@@ -128,9 +126,10 @@ def start_threads
       end # until queue.empty?
     end # threads << Thread.new do
   end # NUM_THREADS
+  threads
 end
 
-def scrape_exams_or_notes_page(url, ua)
+def scrape_exams_or_notes_page(url, university_obj, ua)
   # Grab all the professors on each page
   documents = Nokogiri::HTML(open(url), ua).css('.title a')
 
@@ -162,6 +161,10 @@ def scrape_exams_or_notes_page(url, ua)
 
         # Lets parse this shit out and save dat hoe
         professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
+        
+        if professor_obj.first_name == "Rate"
+          p "Failed to find professor name ~~~~> " + professor_url
+        end
       end # for professor in professors
 
       path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
@@ -179,8 +182,8 @@ def scrape_exams_or_notes_page(url, ua)
   true
 end
 
-queue_universities
-start_threads
+queue = queue_universities([State.find(38)])
+threads = start_threads(queue)
 
 threads.collect { |t| t.join }
 execution_finished = (Time.now - execution_start)
