@@ -183,7 +183,7 @@ def scrape_exams_or_notes_page(url, university_obj, type, ua)
   true
 end
 
-queue = queue_universities(State.all)
+queue = queue_universities([State.find(38)])
 threads = start_threads(queue)
 
 threads.collect { |t| t.join }
