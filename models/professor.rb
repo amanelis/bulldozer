@@ -23,7 +23,7 @@ class Professor < ActiveRecord::Base
     last_name = matches[2]
 
     dept_matches = document.at_css('#job_summary').text.match /\r\n(.+)\r\n\t+$/
-    dept = dept_matches.empty? ? nil : dept_matches[1].strip
+    dept = dept_matches.nil? ? nil : dept_matches[1].strip
 
     # Get the rating.
     rating = nil
