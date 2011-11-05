@@ -160,7 +160,6 @@ NUM_THREADS.times do
         rescue Exception
           p "Failed to scrape page: " + page.inspect
         end
-<<<<<<< HEAD
 
         # Now lets start the Iteration on the professors, this is going to be a lot of data
         # So here we want to get each document, then follow through the professor link, check
@@ -193,8 +192,6 @@ NUM_THREADS.times do
             
           end # for professor in professors
         end # for document in documents
-=======
->>>>>>> 127646638e79b2ce5031aebb481c43d64a1bdc8a
       end # (1..1000).each do |page|
     end # until queue.empty?
   end # threads << Thread.new do
