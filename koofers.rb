@@ -52,6 +52,39 @@ total_documents = total_professors = total_universities = 0
 # Start a queue to stare universities
 queue = Queue.new
 
+# Scrapes the given document page.
+def scrape_document(document, university_obj, ua)
+  document_url = "http://www.koofers.com" + document[:href]
+  document_name = document.content
+  
+  # Now we want to follow the link on the document page to grab the professor name
+  professor_document = Nokogiri::HTML(open(document_url))
+  professor_link = professor_document.css('tr:nth-child(2) a')[0];
+  isStaff = professor_document.css('tr:nth-child(2) td:nth-child(2)')[0].content == "Staff"
+
+  professor_obj = nil
+
+  if isStaff
+    # Do nothing.
+  elsif professor_link.nil?
+    p "[ERROR] Couldn't parse professors @ " + document_url
+  else
+    # Here is where we want to do the professor check and create the document professor
+    # relation, store it in the database, and fuck koofers. 
+    professor_url  = "http://www.koofers.com" + professor_link[:href]
+
+    # Lets parse this shit out and save dat hoe
+    professor_obj = Professor.create_from_url(professor_url, university_obj, ua)
+  end # for professor in professors
+
+  path = "#{university_obj.slug}/#{isStaff ? "STAFF" : professor_obj.identifier}/"
+  document_obj = Document.create!({:university_id => university_obj.id, :professor_id => isStaff ? nil : professor_obj.id, :url => document_url, :path => path})
+  
+  professor_name = isStaff ? "STAFF" : professor_obj.first_name + " " + professor_obj.last_name
+  p "Added document @ " + document_obj[:url] + " with professor: " + professor_name
+end
+
+
 # Scrape the given page of listed documents.
 def scrape_document_page(documents, university_obj, ua)
   # Now lets start the Iteration on the professors, this is going to be a lot of data
@@ -62,45 +95,11 @@ def scrape_document_page(documents, university_obj, ua)
       scrape_document(document, university_obj, ua);
     rescue Exception => e
       p "Failed to scrape document: " + document.inspect
-      p e.backtrace.join("\\n")
-      p ""
+      print e.backtrace.join("\n")
       p e.inspect
     end
   end # for document in documents
 end
-
-
-# Scrapes the given document page.
-def scrape_document(document, university_obj, ua)
-  document_url = "http://www.koofers.com" + document[:href]
-  document_name = document.content
-  
-  p document[:href]
-  p "   " + document_name
-  
-  professor_obj = nil
-
-  # Now we want to follow the link on the document page to grab the professor name
-  professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
-  if professor_document_data.nil?
-    p "Professor not found, fuck"
-  else
-    # Here is where we want to do the professor check and create the document professor
-    # relation, store it in the database, and fuck koofers. 
-    name = professor_document_data.first 
-    professor_name = name.content
-    professor_url  = name[:href]
-    p "       " + professor_name
-
-    # Lets parse this shit out and save dat hoe
-    professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
-      
-  end # for professor in professors
-
-  path = "#{university_obj.slug}/#{professor_obj.identifier}/"
-  document_obj = Document.create!({:university_id => university_obj.id, :professor_id => professor_obj.id, :url => document_url, :path => path})
-end
-
 
 ###################################
 # Let the scrapage begin.
@@ -138,8 +137,10 @@ NUM_THREADS.times do
             
       rescue Exception => e
         p "****************************************************************"
-        p "   FUCK" + university_url + " failed: " + e
+        p "   FUCK" + university_url + " failed: " + e.inspect
         p "****************************************************************"
+        print e.backtrace.join("\n")
+        p e.inspect
         next;
       end
       
@@ -151,7 +152,7 @@ NUM_THREADS.times do
       # Through as many pages as possible.
       (1..1000).each do |page|
         begin
-          documents_url = "http://www.koofers.com/#{university_obj.slug}/&p=#{page}"
+          documents_url = university_url + "study-materials?exams&p=#{page}"
 
           # p Thread.current.object_id.to_s + ": " + documents_url
 
@@ -164,8 +165,9 @@ NUM_THREADS.times do
           end
           
           scrape_document_page(documents, university_obj, ua)
-        rescue Exception
-          p "Failed to scrape page: " + page.inspect
+        rescue Exception => e
+          p "Failed to scrape page: " + documents_url
+          p e.inspect
         end
       end # (1..1000).each do |page|
     end # until queue.empty?
@@ -174,3 +176,5 @@ end # NUM_THREADS
 
 threads.collect { |t| t.join }
 p "finished"
+
+

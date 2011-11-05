@@ -11,7 +11,10 @@ class University < ActiveRecord::Base
 
     # Find the name of the university.
     document = Nokogiri::HTML(open(url), ua)
-    name = document.css(".header_container .pale_text")[0].content
+    stateSchool = document.css(".header_container .pale_text")[0]
+    otherSchool = document.css(".header_container h1")[0]
+
+    name = stateSchool.nil? ? otherSchool.content : stateSchool.content
 
     University.create!({:name => name, :slug => slug, :state_id => state.id})
   end
