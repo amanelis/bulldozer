@@ -53,19 +53,7 @@ total_documents = total_professors = total_universities = 0
 queue = Queue.new
 
 # Scrape the given page of listed documents.
-def scrape_document_page(page, university_obj, ua)
-  documents_url = "http://www.koofers.com/#{university_obj.slug}/&p=#{page}"
-
-  # p Thread.current.object_id.to_s + ": " + documents_url
-
-  # Grab all the professors on each page
-  documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
-
-  # Break if no professors on data
-  if documents.nil? || documents.empty? 
-    return
-  end
-
+def scrape_document_page(documents, university_obj, ua)
   # Now lets start the Iteration on the professors, this is going to be a lot of data
   # So here we want to get each document, then follow through the professor link, check
   # the database if professor exists, create the professor and insert the document.
@@ -74,6 +62,8 @@ def scrape_document_page(page, university_obj, ua)
       scrape_document(document, university_obj, ua);
     rescue Exception => e
       p "Failed to scrape document: " + document.inspect
+      p e.backtrace.join("\\n")
+      p ""
       p e.inspect
     end
   end # for document in documents
@@ -85,6 +75,7 @@ def scrape_document(document, university_obj, ua)
   document_url = "http://www.koofers.com" + document[:href]
   document_name = document.content
   
+  p document[:href]
   p "   " + document_name
   
   professor_obj = nil
@@ -96,15 +87,14 @@ def scrape_document(document, university_obj, ua)
   else
     # Here is where we want to do the professor check and create the document professor
     # relation, store it in the database, and fuck koofers. 
-    professor_document_data.each do |name|
-      professor_name = name.content
-      professor_url  = name[:href]
-      p "       " + professor_name
+    name = professor_document_data.first 
+    professor_name = name.content
+    professor_url  = name[:href]
+    p "       " + professor_name
 
-      # Lets parse this shit out and save dat hoe
-      professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
+    # Lets parse this shit out and save dat hoe
+    professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
       
-    end # professor_document_data.each do |name|
   end # for professor in professors
 
   path = "#{university_obj.slug}/#{professor_obj.identifier}/"
@@ -161,7 +151,19 @@ NUM_THREADS.times do
       # Through as many pages as possible.
       (1..1000).each do |page|
         begin
-          scrape_document_page(page, university_obj, ua)
+          documents_url = "http://www.koofers.com/#{university_obj.slug}/&p=#{page}"
+
+          # p Thread.current.object_id.to_s + ": " + documents_url
+
+          # Grab all the professors on each page
+          documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
+
+          # Break if no docuemnet on data
+          if documents.nil? || documents.empty? 
+            break
+          end
+          
+          scrape_document_page(documents, university_obj, ua)
         rescue Exception
           p "Failed to scrape page: " + page.inspect
         end
