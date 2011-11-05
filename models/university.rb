@@ -10,10 +10,9 @@ class University < ActiveRecord::Base
     return existing unless existing.nil?
 
     # Find the name of the university.
-    document = Nokogiri::HTML(open(url), ua)
-    name = document.css(".header_container .pale_text")[0].content
+    name = Nokogiri::HTML(open(url), ua).css(".header_container .pale_text").first
 
-    University.create!({:name => name, :slug => slug, :state_id => state.id})
+    u = University.create!({:name => name.content, :slug => slug, :state_id => state.id})
   end
 
 end

@@ -52,56 +52,6 @@ total_documents = total_professors = total_universities = 0
 # Start a queue to stare universities
 queue = Queue.new
 
-# Scrape the given page of listed documents.
-def scrape_document_page(documents, university_obj, ua)
-  # Now lets start the Iteration on the professors, this is going to be a lot of data
-  # So here we want to get each document, then follow through the professor link, check
-  # the database if professor exists, create the professor and insert the document.
-  for document in documents
-    begin
-      scrape_document(document, university_obj, ua);
-    rescue Exception => e
-      p "Failed to scrape document: " + document.inspect
-      p e.backtrace.join("\\n")
-      p ""
-      p e.inspect
-    end
-  end # for document in documents
-end
-
-
-# Scrapes the given document page.
-def scrape_document(document, university_obj, ua)
-  document_url = "http://www.koofers.com" + document[:href]
-  document_name = document.content
-  
-  p document[:href]
-  p "   " + document_name
-  
-  professor_obj = nil
-
-  # Now we want to follow the link on the document page to grab the professor name
-  professor_document_data = Nokogiri::HTML(open(document_url)).css('tr:nth-child(2) a')
-  if professor_document_data.nil?
-    p "Professor not found, fuck"
-  else
-    # Here is where we want to do the professor check and create the document professor
-    # relation, store it in the database, and fuck koofers. 
-    name = professor_document_data.first 
-    professor_name = name.content
-    professor_url  = name[:href]
-    p "       " + professor_name
-
-    # Lets parse this shit out and save dat hoe
-    professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
-      
-  end # for professor in professors
-
-  path = "#{university_obj.slug}/#{professor_obj.identifier}/"
-  document_obj = Document.create!({:university_id => university_obj.id, :professor_id => professor_obj.id, :url => document_url, :path => path})
-end
-
-
 ###################################
 # Let the scrapage begin.
 ###################################
@@ -130,42 +80,29 @@ NUM_THREADS.times do
    
   threads << Thread.new(ua) do |ua|
     until queue.empty?
-      begin
-        university_url = queue.pop
-        
-        # Right here lets create a university
-        university_obj = University.create_from_url(university_url, state, ua)
-            
-      rescue Exception => e
-        p "****************************************************************"
-        p "   FUCK" + university_url + " failed: " + e
-        p "****************************************************************"
-        next;
-      end
+      university_url = queue.pop
       
-      puts "Processing #{university_url}"
-      puts "******************************************************************************************************"
+      # Right here lets create a university
+      university_obj = University.create_from_url(university_url, state, ua)
 
       # Here is the big iteration on the Professors, could take a while
       # Definitely need to thread these iterations out. We will try to paginate
       # Through as many pages as possible.
       (1..1000).each do |page|
-        begin
-          documents_url = "http://www.koofers.com/#{university_obj.slug}/&p=#{page}"
+        documents_url = "http://www.koofers.com/#{university_obj.slug}/study-materials?exams&p=#{page}"
 
-          # p Thread.current.object_id.to_s + ": " + documents_url
+        documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
 
-          # Grab all the professors on each page
-          documents = Nokogiri::HTML(open(documents_url), ua).css('.title a')
-
-          # Break if no docuemnet on data
-          if documents.nil? || documents.empty? 
-            break
-          end
-          
-          scrape_document_page(documents, university_obj, ua)
-        rescue Exception
-          p "Failed to scrape page: " + page.inspect
+        if documents.nil? || documents.empty? 
+          break
+        else
+      
+          for document in documents
+            p "DOCUMENTS FOR: #{university_obj.slug}"
+            p document[:href]
+            p document.content
+        
+          end # for document in documents
         end
       end # (1..1000).each do |page|
     end # until queue.empty?

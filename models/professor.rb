@@ -1,7 +1,14 @@
-require 'nokogiri'
-require 'open-uri'
-require 'net/http'
+require 'rubygems'
+require 'thread'
+require 'json'
 require 'uri'
+require 'open-uri'
+require 'nokogiri'
+require 'mechanize'
+require 'net/http'
+require 'yajl/http_stream'
+require 'active_record'
+require 'rails/all'
 
 class Professor < ActiveRecord::Base  
   belongs_to :university
