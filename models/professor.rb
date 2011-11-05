@@ -18,7 +18,7 @@ class Professor < ActiveRecord::Base
 
     # TODO(CH) Pass in the user agent / proxy.
     document = Nokogiri::HTML(open(url), ua)
-    matches = document.at_css(".breadcrumbs_widget").content.match /».*».*» (.+) (.+)$/
+    matches = document.at_css(".breadcrumbs_widget").content.match /».*».*» (.+)? (.+)$/
     first_name = matches[1]
     last_name = matches[2]
 
