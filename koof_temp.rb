@@ -3,6 +3,7 @@ require 'nokogiri'
 require 'open-uri'
 require 'json'
 require 'active_record'
+require 'net/http'
 
 module Scrape
   class Koofers
@@ -25,8 +26,10 @@ module Scrape
   end # class
 end # module
 
-url = "http://www.koofers.com/university-of-texas-austin-utexas/study-materials?exams&p=2"
-doc = Nokogiri::HTML(open(url)).css('.title a').collect { |obj| obj[:href] }
+doc = "http://www.koofers.com/files/exam-cqkazl1ewa/" + "koofer.pdf&printButton=Yes&sendViewerEvents=Yes"
 
-puts doc
+writeOut = open('./tmp/haha.pdf', "wb")
+writeOut.write(open(doc).read)
+writeOut.close
+puts "downloaded"
 

@@ -29,8 +29,8 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.integer :university_id
       t.string :first_name
       t.string :last_name
-      t.integer :rating
-      t.string :identifier
+      t.float :rating
+      t.integer :identifier
     end
   
     create_table :states do |t|
