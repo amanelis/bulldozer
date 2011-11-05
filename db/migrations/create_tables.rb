@@ -30,7 +30,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.string :first_name
       t.string :last_name
       t.float :rating
-      t.string :identifier
+      t.integer :identifier
     end
   
     create_table :states do |t|
