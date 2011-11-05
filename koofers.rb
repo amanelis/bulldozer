@@ -107,7 +107,7 @@ puts "Starting the queue process..."
 # Iterate through the states
 for state in states
   ua = agents[rand(agents.length)]
-  puts "Processing #{state}-----------------------------------------------------------"
+  puts "Processing #{state.abbv}-----------------------------------------------------------"
   universities = Nokogiri::HTML(open("http://www.koofers.com/universities?s=#{state.abbv}"), ua).css('.univ_list a')
 
   # Iterate through the professors

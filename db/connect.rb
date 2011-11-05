@@ -5,5 +5,6 @@ ActiveRecord::Base.establish_connection(
   :host     => "localhost", 
   :username => "root", 
   :password => "", 
-  :database => "koofers"
+  :database => "koofers",
+  :pool     => 25
 )
