@@ -103,6 +103,7 @@ NUM_THREADS.times do
       (1..1000).each do |page|
         begin
           documents_url = university_url + "study-materials?exams&p=#{page}"
+          notes_url = university_url + "study-materials?notes&p=#{page}"
 
           # p Thread.current.object_id.to_s + ": " + documents_url
 
