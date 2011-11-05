@@ -39,6 +39,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
   
     create_table :universities do |t|
       t.string :name
+      t.string :slug
       t.integer :state_id
     end
   end
@@ -48,9 +49,5 @@ states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI
            "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
            "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]
 
-class State < ActiveRecord::Base  
-end
-
-for state in states
-  State.create!(:abbv => state)
-end
+class State < ActiveRecord::Base; end
+states.collect { |state| State.create!(:abbv => state) }
