@@ -8,163 +8,88 @@ require 'mechanize'
 require 'net/http'
 require 'yajl/http_stream'
 require 'active_record'
-require 'rest-client'
 require 'rails/all'
+require './include/crocodoc.rb'
 require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
 require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
 
-execution_start = Time.now
 
-koof_url = 'http://www.koofers.com/files/exam-h4iimxm93x/koofer.pdf'
-api_uri  = URI.parse("http://crocodoc.com/api/v1/document/upload?url=#{koof_url}&token=SsrZniG7p0QxRCYvAhfg")
+# Proxy ip addresses
+$PROXIES = [{:ip => '128.143.6.130', :port => '3128'}]
 
-module Crocodoc
-  extend self
+# User agents list
+$AGENTS  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6',
+           'Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.84 Safari/534.13',
+           'Mozilla/5.0 (X11; U; CrOS i686 0.9.128; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.341 Safari/534.10',
+           'Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)',
+           'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; Media Center PC 6.0; InfoPath.2; MS-RTC LM 8)',
+           'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6',
+           'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',
+           'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)',
+           'Googlebot/2.1 ( http://www.googlebot.com/bot.html)',
+           'Mozilla/2.0 (compatible; Ask Jeeves)',
+           'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
-  # Crocodoc's API's base URL
-  API_URL = "https://crocodoc.com/api/v1"
+# Number of threads to have running at one time.
+$NUM_THREADS = 20
 
-  # These options are your preferred defaults that will be passed to various
-  # API methods, so that you don't have to pass the same things in each time.
-  # Any of these options can be overridden when calling an API method by
-  # simply passing the option to the method with a different value.
-  API_OPTIONS = {
-    # Your API token
-    :token => "SsrZniG7p0QxRCYvAhfg",
+# queue_document(documents obj array) #########################################################
+def queue_documents(documents)
+  # Start a queue to stare universities
+  queue = Queue.new
 
-    # When uploading in async mode, a response is returned before conversion begins.
-    :async => false,
+  puts "Starting the queue process..."
+  for document in documents
+    ua = $AGENTS[rand($AGENTS.length)]
+    puts "Processing #{document.url}-----------------------------------------------------------"
 
-    # Documents uploaded as private can only be accessed by owners or via sessions.
-    :private => false,
-
-    # When downloading, should the document include annotations?
-    :annotated => false,
-
-    # Can users mark up the document? (Affects both #share and #get_session)
-    :editable => true,
-
-    # Whether or not a session user can download the document.
-    :downloadable => true
-  }
-
-  # "Upload and convert a file. This method will try to convert a file that has
-  #  been referenced by a URL or has been uploaded via a POST request."
-  def upload(url_or_file, options = {})
-    if url_or_file.is_a? String
-      options.merge! :url => url_or_file
-    else
-      options.merge! :file => url_or_file
-    end
-    _shake_and_stir_params(options, :url, :file, :title, :async, :private, :token)
-
-    _request("/document/upload", (options[:file] ? :post : :get), options)
-  end
-
-  # "Check the conversion status of a document."
-  def status(*uuids)
-    options = {}
-    options.merge! uuids.pop if uuids.last.is_a? Hash
-    options.merge! :uuids => uuids.join(",")
-    _shake_and_stir_params(options, :uuids, :token)
-
-    _request("/document/status", :get, options)
-  end
-
-  # "Delete an uploaded file."
-  def delete(uuid, options = {})
-    options.merge! :uuid => uuid
-    _shake_and_stir_params(options, :uuid, :token)
-
-    _request("/document/delete", :get, options)
-  end
-
-  # "Download an uploaded file with or without annotations."
-  def download(uuid, options = {})
-    options.merge! :uuid => uuid
-    _shake_and_stir_params(options, :uuid, :annotated, :token)
-
-    _request_raw("/document/download", :get, options)
-  end
-
-  # "Creates a new 'short ID' that can be used to share a document."
-  def share(uuid, options = {})
-    options.merge! :uuid => uuid
-    _shake_and_stir_params(options, :uuid, :editable, :token)
-
-    _request("/document/share", :get, options)
-  end
-
-  # "Clones an uploaded document. Document annotations are not copied."
-  def clone(uuid, options = {})
-    options.merge! :uuid => uuid
-    _shake_and_stir_params(options, :uuid, :token)
-    
-    _request("/document/clone", :get, options)
-  end
-
-  # "Creates a session ID for session-based document viewing. Each session ID
-  #  may only be used once."
-  def get_session(uuid, options = {})
-    options.merge! :uuid => uuid
-    _shake_and_stir_params(options, :uuid, :token, :downloadable, :editable, :name)
-
-    _request("/session/get", :get, options)
-  end
-
-  # "View an embedded document. This URL returns a web page that can be embedded
-  #  within an iframe."
-  def embeddable_viewer_url(shortId)
-    "http://crocodoc.com/#{shortId}?embedded=true"
-  end
-
-  # "View a document using session-based viewing. Session-based viewing enables
-  #  the embedding of private documents. To obtain session IDs, use the
-  #  session/get API method."
-  def session_based_viewer_url(sessionId)
-    "https://crocodoc.com/view/?sessionId=#{sessionId}"
-  end
-
-  private
-
-  def _request(path, method, options)
-    response_body = _request_raw(path, method, options)
-
-    if response_body == false
-      false
-    elsif response_body == "true"
-      # JSON.parse has a problem with parsing the string "true"...
-      true
-    else
-      JSON.parse(response_body, :symbolize_names => true)
+    documents.each do |d|
+      queue << d
+      puts "    queuing: #{d.id}, #{d.url}, #{d.university.name}"
     end
   end
-
-  def _request_raw(path, method, options)
-    response = case method
-    when :get
-      RestClient.get(API_URL + path, :params => options)
-    when :post
-      RestClient.post(API_URL + path, options)
-    else
-      raise ArgumentError, "method must be :get or :post"
-    end
-
-    response.code == 200 ? response.to_str : false
-  end
-
-  def _shake_and_stir_params(params, *whitelist)
-    # Mix and stir the two params hashes together.
-    params.replace API_OPTIONS.merge(params)
-
-    # Shake out the unwanted params.
-    params.keys.each do |key|
-      params.delete(key) unless whitelist.include? key
-    end
-  end
+  puts "All documents have been queued: #{queue.length}"
+  queue
 end
 
-puts "Duration: #{Time.now - execution_start} seconds"
+def start_threads(queue)
+  # Where we will store the threads in process
+  # Data results so we can compare to thread output
+  threads = []
+
+  $NUM_THREADS.times do
+    # Create the Mechanize object for login in the user.
+    # Select a new user agent, and proxy each iteration.
+    ua = $AGENTS[rand($AGENTS.length)]
+    pr = $PROXIES[rand($PROXIES.length)]
+     
+    threads << Thread.new(ua) do |ua|
+      until queue.empty?
+        begin
+          doc = queue.pop
+          p "#{doc.id}, #{doc.url}"
+          
+          begin
+            # writeOut = open('./tmp/haha.pdf', "wb")
+            # writeOut.write(open(doc).read)
+            # writeOut.close
+            # puts "downloaded"
+          rescue
+            
+          end
+              
+        rescue Exception => e
+          next
+        end
+      end # until queue.empty?
+    end # threads << Thread.new do
+  end
+  threads
+end
+
+queue = queue_documents(Document.where(:id => [1,2,3,4,5,6,7]))
+threads = start_threads(queue)
+threads.collect { |t| t.join }
