@@ -40,6 +40,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
       t.string :last_name
       t.float :rating
       t.integer :identifier
+      t.string :department_name
     end
   
     create_table :states do |t|
