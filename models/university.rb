@@ -1,4 +1,6 @@
 class University < ActiveRecord::Base  
+  belongs_to :state
+  has_many :professors
 
   def self.create_from_url(url, state)
     slug = url.match(/com\/(\w+)\//)

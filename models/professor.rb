@@ -4,6 +4,8 @@ require 'net/http'
 require 'uri'
 
 class Professor < ActiveRecord::Base  
+  belongs_to :university
+  has_many :documents
 
   # Creates a Professor model from the given Koofers professor URL.
   def self.create_from_url(url, university, ua)
