@@ -20,37 +20,39 @@ ActiveRecord::Base.connection.create_database(:koofers) unless connection
 
 unless ActiveRecord::Base.connection.table_exists?(:documents)
   class CreateTables < ActiveRecord::Migration
-    create_table :documents do |t|
-      t.integer :university_id
-      t.integer :professor_id
-      t.string :course_name
-      t.string :url
-      t.string :path
-      t.string :type
-    end
+    transaction do
+      create_table :documents do |t|
+        t.integer :university_id
+        t.integer :professor_id
+        t.string :course_name
+        t.string :url
+        t.string :path
+        t.string :type
+      end
   
-    create_table :professors do |t|
-      t.integer :university_id
-      t.string :first_name
-      t.string :last_name
-      t.float :rating
-      t.integer :identifier
-      t.string :department_name
-      t.string :url
-    end
+      create_table :professors do |t|
+        t.integer :university_id
+        t.string :first_name
+        t.string :last_name
+        t.float :rating
+        t.integer :identifier
+        t.string :department_name
+        t.string :url
+      end
   
-    create_table :states do |t|
-      t.string :abbv
-    end
+      create_table :states do |t|
+        t.string :abbv
+      end
   
-    create_table :universities do |t|
-      t.string :name
-      t.string :slug
-      t.integer :state_id
-      t.string :url
-    end
-  end
-end
+      create_table :universities do |t|
+        t.string :name
+        t.string :slug
+        t.integer :state_id
+        t.string :url
+      end
+    end # transaction do...
+  end # class CreateTables...
+end # unless ActiveRecord...
 
 states  = ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA",
            "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR",
