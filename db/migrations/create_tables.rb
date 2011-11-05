@@ -23,6 +23,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
     create_table :documents do |t|
       t.integer :university_id
       t.integer :professor_id
+      t.string :path
     end
   
     create_table :professors do |t|
