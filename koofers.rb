@@ -77,7 +77,7 @@ NUM_THREADS.times do
         university_url = queue.pop
         
         # Right here lets create a university
-        university = University.create_from_url(university_url, state)
+        university = University.create_from_url(university_url, state, ua)
             
       rescue Exception
         p "****************************************************************"
