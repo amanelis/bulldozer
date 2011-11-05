@@ -35,12 +35,10 @@ agents  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) C
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
 # States array to limit calls to koofers  
-states = []         
-states << State.find_by_abbv('TX')
-states << State.find_by_abbv('AL')
+states = State.all
 
 # Number of threads to have running at one time.
-NUM_THREADS = 3
+NUM_THREADS = 5
 
 # Where we will store the threads in process
 # Data results so we can compare to thread output
