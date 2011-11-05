@@ -77,7 +77,7 @@ NUM_THREADS.times do
         university_url = queue.pop
         
         # Right here lets create a university
-        university = University.create_from_url(university_url, state)
+        university_obj = University.create_from_url(university_url, state)
             
       rescue Exception
         p "****************************************************************"
@@ -130,7 +130,7 @@ NUM_THREADS.times do
               p "       " + professor_name
 
               # Lets parse this shit out and save dat hoe
-              Professor.create_from_url(profess_url, university, ua)
+              professor_obj = Professor.create_from_url(profess_url, university_obj, ua)
               
             end # professor_document_data.each do |name|
           end # for professor in professors
