@@ -1,21 +1,17 @@
 require 'rubygems'
 require 'thread'
-require 'json'
-require 'uri'
 require 'open-uri'
 require 'nokogiri'
 require 'mechanize'
-require 'net/http'
-require 'yajl/http_stream'
-require 'active_record'
+require 'aws/s3'
 require 'rails/all'
-require './include/crocodoc.rb'
+require 'active_record' 
+require './include/amazon.rb'
 require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
 require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
-
 
 # Proxy ip addresses
 $PROXIES = [{:ip => '128.143.6.130', :port => '3128'}]
@@ -34,7 +30,27 @@ $AGENTS  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) 
            'Msnbot-Products/1.0 (+http://search.msn.com/msnbot.htm)'] 
 
 # Number of threads to have running at one time.
-$NUM_THREADS = 20
+$NUM_THREADS = 2
+
+def upload_to_s3(filename, url, bucket, content)
+  # Connect to S3
+  # connection = AWS::S3::Base.establish_connection!(:access_key_id => 'AKIAIZHFNNVBSE4BYUTQ', :secret_access_key => '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')
+  # 
+  # # Make the upload
+  # o = AWS::S3::S3Object.store(
+  #       filename,
+  #       open(url),
+  #       bucket,
+  #       :content_type => content
+  #     )
+  # url = AWS::S3::S3Object.url_for(File.basename(filename), bucket)[/[^?]+/]
+  
+  a = AmazonS3Asset.new
+  result = a.store_file(filename, url, bucket, content)
+  result
+end
+
+
 
 # queue_document(documents obj array) #########################################################
 def queue_documents(documents)
@@ -45,17 +61,15 @@ def queue_documents(documents)
   for document in documents
     ua = $AGENTS[rand($AGENTS.length)]
     puts "Processing #{document.url}-----------------------------------------------------------"
-
-    documents.each do |d|
-      queue << d
-      puts "    queuing: #{d.id}, #{d.url}, #{d.university.name}"
-    end
+    queue << document
+    puts "    queuing: #{document.id}, #{document.url}, #{document.university.name}"
   end
   puts "All documents have been queued: #{queue.length}"
   queue
 end
 
 def start_threads(queue)
+  
   # Where we will store the threads in process
   # Data results so we can compare to thread output
   threads = []
@@ -66,30 +80,34 @@ def start_threads(queue)
     ua = $AGENTS[rand($AGENTS.length)]
     pr = $PROXIES[rand($PROXIES.length)]
      
-    threads << Thread.new(ua) do |ua|
+    threads << Thread.new(ua) do |ua|      
       until queue.empty?
-        begin
-          doc = queue.pop
-          p "#{doc.id}, #{doc.url}"
-          
-          begin
-            # writeOut = open('./tmp/haha.pdf', "wb")
-            # writeOut.write(open(doc).read)
-            # writeOut.close
-            # puts "downloaded"
-          rescue
-            
-          end
-              
-        rescue Exception => e
-          next
-        end
+        # consume the queue, returns a Document object
+        doc = queue.pop
+        
+        # Create the url from koofers bullshit
+        bucket = "frtbcdn"
+        pdf_url = doc.url + '/koofer.pdf'
+        filename = "document-#{doc.id}-#{DateTime.new(2009,9,5,15,45,50).strftime('%F')}.pdf"
+        content = 'application/pdf'
+        
+        a = AmazonS3Asset.new
+        result = a.store_file(filename, pdf_url, bucket, content)
+        p "RESULTS FROM UPLOADL-------------------------------------------"
+        p result.inspect
       end # until queue.empty?
     end # threads << Thread.new do
   end
   threads
 end
 
-queue = queue_documents(Document.where(:id => [1,2,3,4,5,6,7]))
+numbers = (1..1000).collect {|x| x }
+queue = queue_documents(Document.where(:id => numbers))
 threads = start_threads(queue)
 threads.collect { |t| t.join }
+
+
+
+
+
+
