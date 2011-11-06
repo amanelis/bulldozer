@@ -1,17 +1,3 @@
-require 'rubygems'
-require 'thread'
-require 'json'
-require 'uri'
-require 'open-uri'
-require 'nokogiri'
-require 'mechanize'
-require 'net/http'
-require 'active_record'
-require 'aws/s3'
-require 'rails/all' 
-
-puts "INCLUDED AMAASONZZS"
-
 class AmazonS3Asset
   
   include AWS::S3
@@ -19,7 +5,7 @@ class AmazonS3Asset
   S3KEY = "ibnk9H9U5+wva9wn1A/2OtcEJ7h+hmMRfRmX5WuN"
   
   def initialize
-    puts "connecting..."
+    puts "Connecting to Amazon..."
     AWS::S3::Base.establish_connection!(
       :access_key_id     => S3ID,
       :secret_access_key => S3KEY

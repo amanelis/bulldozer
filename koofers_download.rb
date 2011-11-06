@@ -32,26 +32,6 @@ $AGENTS  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) 
 # Number of threads to have running at one time.
 $NUM_THREADS = 2
 
-def upload_to_s3(filename, url, bucket, content)
-  # Connect to S3
-  # connection = AWS::S3::Base.establish_connection!(:access_key_id => 'AKIAIZHFNNVBSE4BYUTQ', :secret_access_key => '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')
-  # 
-  # # Make the upload
-  # o = AWS::S3::S3Object.store(
-  #       filename,
-  #       open(url),
-  #       bucket,
-  #       :content_type => content
-  #     )
-  # url = AWS::S3::S3Object.url_for(File.basename(filename), bucket)[/[^?]+/]
-  
-  a = AmazonS3Asset.new
-  result = a.store_file(filename, url, bucket, content)
-  result
-end
-
-
-
 # queue_document(documents obj array) #########################################################
 def queue_documents(documents)
   # Start a queue to stare universities
@@ -91,9 +71,10 @@ def start_threads(queue)
         filename = "document-#{doc.id}-#{DateTime.new(2009,9,5,15,45,50).strftime('%F')}.pdf"
         content = 'application/pdf'
         
+        # Create the object for amazon
         a = AmazonS3Asset.new
         result = a.store_file(filename, pdf_url, bucket, content)
-        p "RESULTS FROM UPLOADL-------------------------------------------"
+        p "RESULTS FROM UPLOAD -------------------------------------------"
         p result.inspect
       end # until queue.empty?
     end # threads << Thread.new do
@@ -101,10 +82,11 @@ def start_threads(queue)
   threads
 end
 
-numbers = (1..1000).collect {|x| x }
+numbers = (1..100).collect {|x| x }
 queue = queue_documents(Document.where(:id => numbers))
 threads = start_threads(queue)
 threads.collect { |t| t.join }
+
 
 
 
