@@ -28,7 +28,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.string :url
         t.string :path
         t.string :type
-        
+        t.string :s3_url
       end
   
       create_table :professors do |t|
@@ -39,6 +39,13 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.integer :identifier
         t.string :department_name
         t.string :url
+      end
+  
+      create_table :results do |t|
+        t.integer :university_id
+        t.integer :professor_id
+        t.string :base_url
+        t.string :amazon_url
       end
   
       create_table :states do |t|

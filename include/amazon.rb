@@ -6,10 +6,12 @@ class AmazonS3Asset
   
   def initialize
     puts "Connecting to Amazon..."
-    AWS::S3::Base.establish_connection!(
-      :access_key_id     => S3ID,
-      :secret_access_key => S3KEY
-    )
+    if AWS::S3::Base.connected? == false
+      AWS::S3::Base.establish_connection!(
+        :access_key_id     => S3ID,
+        :secret_access_key => S3KEY
+      )
+    end
   end
 
   def delete_key(bucket, key)
@@ -61,20 +63,21 @@ class AmazonS3Asset
     #   bucket,
     #   :access => :public_read
     # )
-    puts "  ----> AmazonS3Asset.store_file"
-    puts "  ----> filename: #{filename}"
-    puts "  ----> url: #{url}"
-    puts "  ----> bucket: #{bucket}"
-    puts "  ----> content: #{content}"
+    # puts "  ----> AmazonS3Asset.store_file"
+    # puts "  ----> filename: #{filename}"
+    # puts "  ----> url: #{url}"
+    # puts "  ----> bucket: #{bucket}"
+    # puts "  ----> content: #{content}"
     o = S3Object.store(
          filename,
          open(url),
          bucket,
-         :content_type => content
+         :content_type => content,
+         :access => :public_read
        )
     u = S3Object.url_for(File.basename(filename), bucket)[/[^?]+/]
     
-    result = []; result << ({:object => o, :url => u})
+    result = {:s3_response => o, :s3_url => u}
     result
   end
 

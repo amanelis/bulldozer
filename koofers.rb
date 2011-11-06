@@ -13,6 +13,7 @@ require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
 require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
+require File.expand_path(File.dirname(__FILE__) + '/models/result')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
 
 execution_start = Time.now
