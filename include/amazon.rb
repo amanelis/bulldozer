@@ -67,7 +67,8 @@ class AmazonS3Asset
     # puts "  ----> filename: #{filename}"
     # puts "  ----> url: #{url}"
     # puts "  ----> bucket: #{bucket}"
-    # puts "  ----> content: #{content}"
+    # puts "  ----> content: #{content}"    
+    
     o = S3Object.store(
          filename,
          open(url),
