@@ -31,27 +31,14 @@ def process_documents(universities)
   error_count = 0
   
   universities.each do |university|
-    puts "Starting the queue process..."
     for document in university.documents
-      puts "Processing #{document.url}-----------------------------------------------------------"
-
       document_professor_id = (document.professor.nil? ? (0) : (document.professor.id))
       document_university_id = (document.university.nil? ? (0) : (document.university.id))
-
-      # Put the data in a queue as a hash for easy ready later
-      data = {:document_object => document, 
-              :document_professor_id => document_professor_id, 
-              :document_university_id => document_university_id}
-
-      # pre processing output
-      puts "    queuing: #{document.id}, #{document.url}, #{document.university.name}"
-      puts "        professor: #{document_professor_id}" 
-      puts "        university: #{document_university_id}"
       
       # Grab the document object out of the hash, well get the rest down below
-      doc = data[:document_object]
-      doc_prof = data[:document_professor_id]
-      doc_univ = data[:document_university_id]
+      doc = document
+      doc_prof = document_professor_id
+      doc_univ = document_university_id
 
       puts "  --> Document#Object from Hash: #{doc.id}, prof: #{doc_prof}, :univ: #{doc_univ}"
 
@@ -75,8 +62,6 @@ def process_documents(universities)
 
         # Update the attriobute on the document with the new shiny s3 url
         doc.update_attributes!(:s3_url => resulting_url)
-      
-        puts "RESULT: #{resulting_url}"
 
         # Save the returning url as a result
          r = Result.create!(:university_id => doc_univ.to_i, 
@@ -84,16 +69,15 @@ def process_documents(universities)
                             :base_url => doc.url, 
                             :amazon_url => resulting_url)
          total_docs_uploaded += 1
+         puts "SUCCESS --> #{doc.id}"
       rescue Exception => e
         error_count += 1
         puts "ERROR[#{error_count}] --> Unable to download the document and store it"
       end
       execution_finished = (Time.now - execution_start)
-      puts "--> Download complete: #{doc.id}, #{doc_prof}, #{doc_univ} in: #{execution_finished} seconds"
-      puts "******************************* Total docs uploaded: #{total_docs_uploaded} *******************************"
     end
   end
-  puts "Process Completed with #{total_docs_uploaded} and #{error_count} failed to upload-------------------------------------------------------------------------------"
+  puts "Process Completed with #{total_docs_uploaded} and #{error_count} failed to upload from #{Process.uid} --------------------------------------------------"
 end
 
 
