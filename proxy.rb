@@ -27,7 +27,7 @@ $AGENTS  = ['Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) 
 url = "http://s3.amazonaws.com/frtbcdn/document-31-2009-09-05.pdf"
 
 proxy_addr = '129.115.248.200'
-proxy_port = 3128
+proxy_port = 80
 
 # puts "Attempting to connect to proxy..."        
 # Net::HTTP::Proxy(proxy_addr, proxy_port).start('www.freetestbank.com') { |http|

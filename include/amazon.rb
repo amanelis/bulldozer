@@ -1,8 +1,8 @@
 class AmazonS3Asset
   
   include AWS::S3
-  S3ID = "AKIAIZHFNNVBSE4BYUTQ"
-  S3KEY = "ibnk9H9U5+wva9wn1A/2OtcEJ7h+hmMRfRmX5WuN"
+  S3ID = "AKIAIRKRAQ4ZEWAIVIDA"
+  S3KEY = "WRvurGnnDlo6tqyXV+3UuIOgRYHphIwmAvUyqKOj"
   
   def initialize
     puts "Connecting to Amazon..."
@@ -22,7 +22,6 @@ class AmazonS3Asset
   
   def empty_bucket(bucket)
     bucket_keys(bucket).each do |k|
-      puts "deleting #{k}"
       delete_key(bucket,k)
     end
   end
@@ -54,6 +53,11 @@ class AmazonS3Asset
       puts "#{from_bucket}.#{from_key} didn't exist"
       return nil
     end
+  end
+  
+  def destroy_bucket(bucket)
+    result = Bucket.delete(bucket, :force => true)
+    result
   end
 
   def store_file(filename, url, bucket, content)

@@ -3,13 +3,13 @@ require 'open-uri'
 require 'aws/s3'
 require 'rails/all'
 require 'active_record' 
-require './include/amazon.rb'
 require File.expand_path(File.dirname(__FILE__) + '/db/connect')
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
 require File.expand_path(File.dirname(__FILE__) + '/models/professor')
 require File.expand_path(File.dirname(__FILE__) + '/models/state')
 require File.expand_path(File.dirname(__FILE__) + '/models/result')
 require File.expand_path(File.dirname(__FILE__) + '/models/university')
+require File.expand_path(File.dirname(__FILE__) + '/include/amazon')
 
 $NUM_PROCESSES = 25
 
@@ -25,6 +25,9 @@ def process_documents(universities)
   
   # Initiate the S3
   a = AmazonS3Asset.new
+  
+  # The bucket we are storing the docs in
+  $BUCKET = 'frtb-documents'
 
   # Keep track of all documents
   total_docs_uploaded = 0
@@ -43,7 +46,7 @@ def process_documents(universities)
       puts "  --> Document#Object from Hash: #{doc.id}, prof: #{doc_prof}, :univ: #{doc_univ}"
 
       # Create the url from koofers bullshit
-      bucket = "frtbcdn"
+      bucket = $BUCKET
       pdf_url = doc.url + '/koofer.pdf'
       filename = "document-#{doc.id}-#{Time.now.strftime("%H%M%S-%Z-%Y-%d-%m")}.pdf"
       content = 'application/pdf'
@@ -83,8 +86,7 @@ end
 
 def import
     start_time = Time.now
-    ids = (1..25).to_a
-    universities = University.where(:id => ids)
+    universities = University.all
     process_ids = []
     chunk_size = (universities.count / Float($NUM_PROCESSES)).ceil
     
