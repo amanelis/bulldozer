@@ -53,7 +53,8 @@ puts "Queuing up: #{documents.count} documents"
             text = page_text.content.match(/(.*) for/)
             title = text.nil? ? "Document" : text[1]
           rescue NoMethodError
-            puts "[ERROR] NoMethodError for page_text.content on doc: #{doc.id}"
+            puts "[ERROR] NoMethodError for page_text.content on doc: #{doc.id} for #{url}"
+            next
           end
 
   
