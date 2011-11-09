@@ -35,9 +35,7 @@ puts "Queuing up: #{documents.count} documents"
 
 25.times do
   threads << Thread.new(q) { |q| 
-    
-      puts "processing #{doc.id} document..."
-    
+        
       until q.empty?
           doc = q.pop
           begin
