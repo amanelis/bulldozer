@@ -23,13 +23,9 @@ ActiveRecord::Base.establish_connection(
   :pool     => 75
 )
 
-download_error = 0
-download_success = 0
-total_time = 0.0
-
 threads = []
 
-documents = Document.find(:all, :conditions => ["title IS NOT NULL"], :order => 'id ASC')
+documents = Document.find(:all, :conditions => ["title IS NULL"], :order => 'id ASC')
 q = Queue.new
 documents.collect { |d| q << d }
 
