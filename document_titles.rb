@@ -53,7 +53,7 @@ puts "Queuing up: #{documents.count} documents"
           # Now save the attribute
           doc.update_attributes!(:title => title) 
 
-          puts "[SUCCESS] Updated title on document: #{doc.id}"
+          puts "[SUCCESS] Updated title on document: #{doc.id} with title: #{doc.title}"
       end #until empty
   }
   
