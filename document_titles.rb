@@ -53,7 +53,6 @@ documents.collect { |d| q << d }
   
           # Now save the attribute
           doc.update_attributes!(:title => title) 
-          download_success += download_success
   
           execution_finished = (Time.now - execution_start)
           total_time += execution_finished
