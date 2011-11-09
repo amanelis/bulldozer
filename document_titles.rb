@@ -89,7 +89,7 @@ def process_documents(documents)
       doc.update_attributes!(:title => title) 
       
       # Result    
-      puts "[SUCCESS] Updated title on document: #{doc.id} in #{execution_finished}"
+      puts "[SUCCESS] Updated title on document: #{doc.id}"
     end
 end
 
