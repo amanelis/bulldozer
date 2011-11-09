@@ -47,6 +47,7 @@ puts "Queuing up: #{documents.count} documents"
           end
   
           page_text = page.css('.content_header_full').first
+          next if page.nil?
           text = page_text.content.match(/(.*) for/)
           title = text.nil? ? "Document" : text[1]
   
