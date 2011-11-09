@@ -19,8 +19,8 @@ ActiveRecord::Base.establish_connection(
   :host     => "localhost", 
   :username => "root", 
   :password => "", 
-  :database => "fratfolder_development",
-  :pool     => 25
+  :database => "koofers",
+  :pool     => 75
 )
 
 download_error = 0
