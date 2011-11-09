@@ -35,7 +35,6 @@ documents.collect { |d| q << d }
 
 
 25.times do
-  
   threads << Thread.new(q) { |q| 
     
       until q.empty?
