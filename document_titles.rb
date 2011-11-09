@@ -29,7 +29,7 @@ total_time = 0.0
 
 threads = []
 
-documents = Document.all
+documents = Document.find(:all, :conditions => ["title IS NOT NULL"], :order => 'id ASC')
 q = Queue.new
 documents.collect { |d| q << d }
 
