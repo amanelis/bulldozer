@@ -49,7 +49,6 @@ puts "Queuing up: #{documents.count} documents"
           begin 
             # Grab the css element
             page_text = page.css('.content_header_full').first
-            
             text = page_text.content.match(/(.*) for/)
             title = text.nil? ? "Document" : text[1]
           rescue NoMethodError
