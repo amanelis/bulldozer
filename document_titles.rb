@@ -36,6 +36,8 @@ puts "Queuing up: #{documents.count} documents"
 25.times do
   threads << Thread.new(q) { |q| 
     
+      puts "processing #{doc.id} document..."
+    
       until q.empty?
           doc = q.pop
           begin
@@ -46,12 +48,16 @@ puts "Queuing up: #{documents.count} documents"
             next
           end
           
-          puts "processing #{doc.id} document..."
-  
-          page_text = page.css('.content_header_full').first
-          next if page_text.try(:content).nil?
-          text = page_text.content.match(/(.*) for/)
-          title = text.nil? ? "Document" : text[1]
+          begin 
+            # Grab the css element
+            page_text = page.css('.content_header_full').first
+            
+            text = page_text.content.match(/(.*) for/)
+            title = text.nil? ? "Document" : text[1]
+          rescue NoMethodError
+            puts "[ERROR] NoMethodError for page_text.content on doc: #{doc.id}"
+          end
+
   
           # Now save the attribute
           doc.update_attributes!(:title => title) 
