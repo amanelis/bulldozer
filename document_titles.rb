@@ -45,6 +45,8 @@ puts "Queuing up: #{documents.count} documents"
             puts "[ERROR] Could not open the URL"
             next
           end
+          
+          puts "processing #{doc.id} document..."
   
           page_text = page.css('.content_header_full').first
           next if page_text.try(:content).nil?
