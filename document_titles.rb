@@ -30,6 +30,9 @@ q = Queue.new
 documents.collect { |d| q << d }
 
 
+puts "Queuing up: #{documents.count} documents"
+
+
 25.times do
   threads << Thread.new(q) { |q| 
     
