@@ -35,15 +35,11 @@ documents.collect { |d| q << d }
     
       until q.empty?
           doc = q.pop
-          
-          execution_start = Time.now
           begin
             url = doc.url
             page = Nokogiri::HTML(open(url))
           rescue Exception
             puts "[ERROR] Could not open the URL"
-            puts ""
-            download_error += download_error
             next
           end
   
@@ -53,11 +49,8 @@ documents.collect { |d| q << d }
   
           # Now save the attribute
           doc.update_attributes!(:title => title) 
-  
-          execution_finished = (Time.now - execution_start)
-          total_time += execution_finished
+
           puts "[SUCCESS] Updated title on document: #{doc.id} in #{execution_finished}"
-          puts ""
       end #until empty
   }
   
@@ -67,7 +60,7 @@ end
 # Join these hoes
 threads.each { |t|  t.join }
 
-puts "[FINISHED] Process completed in #{total_time}--------------------------------------------------"
+puts "[FINISHED] Process completed. --------------------------------------------------"
 
 
 
