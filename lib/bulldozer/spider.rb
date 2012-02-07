@@ -9,6 +9,13 @@ require 'mechanize'
 require 'hpricot'
 require 'url_utils'
 
+
+/* 
+  Author: Alex Manelis
+  
+
+*/
+
 class Spider < Client
   include UrlUtils
   
