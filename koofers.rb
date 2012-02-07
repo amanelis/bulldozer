@@ -115,7 +115,7 @@ def start_threads(queue)
             break unless scrape_exams_or_notes_page(notes_url, university_obj, "notes", ua)
 
           rescue Exception => e
-            p "Failed to scrape notes page: " + url
+            p "Failed to scrape notes page: " + notes_url
             p e.inspect
           end
         end # (1..1000).each do |page|
