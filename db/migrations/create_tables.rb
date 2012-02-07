@@ -1,5 +1,8 @@
+require 'rake/dsl_definition'
+require 'rails/all'
 require 'rubygems'
 require 'json'
+require 'friendly_id'
 require 'nokogiri'
 require 'mechanize'
 require 'open-uri'
@@ -25,10 +28,13 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.integer :university_id
         t.integer :professor_id
         t.string :course_name
+        t.string :title
         t.string :url
         t.string :path
-        t.string :type
+        t.string :style
+        t.string :original_url
         t.string :s3_url
+        t.string :slug
       end
   
       create_table :professors do |t|
@@ -39,6 +45,7 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.integer :identifier
         t.string :department_name
         t.string :url
+        t.string :slug
       end
   
       create_table :results do |t|
@@ -47,16 +54,23 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.string :base_url
         t.string :amazon_url
       end
+      
+      create_table :ratings do |t|
+        t.integer :professor_id
+        t.string :overall_rating
+        t.string :average_gpa
+      end
   
       create_table :states do |t|
         t.string :abbv
+        t.string :slug
       end
   
       create_table :universities do |t|
         t.string :name
-        t.string :slug
         t.integer :state_id
         t.string :url
+        t.string :slug
       end
     end # transaction do...
   end # class CreateTables...

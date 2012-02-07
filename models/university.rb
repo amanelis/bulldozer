@@ -2,6 +2,9 @@ class University < ActiveRecord::Base
   belongs_to :state
   has_many :professors
   has_many :documents
+  
+  extend FriendlyId
+  friendly_id :name, :use => :slugged
 
   def self.create_from_url(url, state, ua)
     slug = url.match(/com\/(.+)\//)[1]
@@ -19,5 +22,4 @@ class University < ActiveRecord::Base
 
     University.create!({:name => name, :slug => slug, :state_id => state.id, :url => url})
   end
-
 end

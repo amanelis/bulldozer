@@ -7,5 +7,4 @@ ActiveRecord::Base.establish_connection(
   :password => "", 
   :database => "koofers",
   :pool     => 25
-  :database => "zulu"
 )

@@ -27,7 +27,7 @@ def process_documents(universities)
   a = AmazonS3Asset.new
   
   # The bucket we are storing the docs in
-  $BUCKET = 'frtb-documents'
+  $BUCKET = 'zulu-documents'
 
   # Keep track of all documents
   total_docs_uploaded = 0

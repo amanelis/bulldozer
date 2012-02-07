@@ -40,6 +40,7 @@ GEM
     builder (3.0.0)
     cocaine (0.2.0)
     erubis (2.7.0)
+    friendly_id (4.0.0)
     hike (1.2.1)
     hpricot (0.8.4)
     i18n (0.6.0)
@@ -120,6 +121,7 @@ PLATFORMS
 DEPENDENCIES
   anemone
   aws-s3 (= 0.6.2)
+  friendly_id
   hpricot
   json
   json_pure
