@@ -24,6 +24,13 @@ ActiveRecord::Base.connection.create_database(:koofers) unless connection
 unless ActiveRecord::Base.connection.table_exists?(:documents)
   class CreateTables < ActiveRecord::Migration
     transaction do
+      
+      create_table :departments do |t|
+        t.string    :name
+        t.string    :slug
+        t.integer   :status
+      end
+      
       create_table :documents do |t|
         t.integer :university_id
         t.integer :professor_id
@@ -35,10 +42,14 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.string :original_url
         t.string :s3_url
         t.string :slug
+        t.string :category
+        t.string :term
+        t.text :description
       end
   
       create_table :professors do |t|
         t.integer :university_id
+        t.integer :department_id
         t.string :first_name
         t.string :last_name
         t.float :rating
@@ -48,17 +59,17 @@ unless ActiveRecord::Base.connection.table_exists?(:documents)
         t.string :slug
       end
   
+      create_table :ratings do |t|
+        t.integer :professor_id
+        t.string :overall_rating
+        t.string :average_gpa
+      end
+  
       create_table :results do |t|
         t.integer :university_id
         t.integer :professor_id
         t.string :base_url
         t.string :amazon_url
-      end
-      
-      create_table :ratings do |t|
-        t.integer :professor_id
-        t.string :overall_rating
-        t.string :average_gpa
       end
   
       create_table :states do |t|
