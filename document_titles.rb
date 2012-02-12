@@ -6,6 +6,7 @@ require 'open-uri'
 require 'nokogiri'
 require 'mechanize'
 require 'net/http'
+require 'yajl/http_stream'
 require 'active_record'
 require 'rails/all'
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
@@ -19,7 +20,7 @@ ActiveRecord::Base.establish_connection(
   :host     => "localhost", 
   :username => "root", 
   :password => "", 
-  :database => "koofers",
+  :database => "fratfolder_development",
   :pool     => 75
 )
 
@@ -30,11 +31,12 @@ threads = []
 q = Queue.new
 
 # Keep track of success failure
+count   = 0
 errors  = 0
 success = 0
 
 # Grab the documents based on no title
-documents = Document.find(:all, :conditions => ["title IS NULL"], :order => 'id ASC')
+documents = Document.all
 documents.collect { |d| q << d }
 
 # Number of threads
@@ -61,10 +63,10 @@ documents.collect { |d| q << d }
             
             
             
-            title         = page_text.content
-            category      = page_category.content
-            date          = page_data.content
-            description   = page_description.content
+            title         = page_title.nil? ? '' : page_title.content
+            category      = page_category.nil? ? '' : page_category.content
+            date          = page_date.nil? ? '' : page_date.content
+            description   = page_description.nil? ? '' : page_description.content
           rescue NoMethodError
             puts "[ERROR] NoMethodError for page_text.content on doc: #{doc.id} for #{url}"
             errors += 1
@@ -74,16 +76,13 @@ documents.collect { |d| q << d }
           # Now save the attribute
           doc.update_attributes!(:title => title, :category => page_category, :term => date, :description => description) 
 
-          puts "[SUCCESS] Updated title on document: #{doc.id} with title: #{doc.title}"
-      end #until empty
+          puts "[SUCCESS][#{count}] Updated title on document: #{doc.id} with title: #{doc.title}"
+          success += 1
+          count += 1
+      end
   }
 end
 
-
 # Join these hoes
 threads.each { |t|  t.join }
-
-puts "[FINISHED] Process completed. --------------------------------------------------"
-
-
-
+puts "[FINISHED] Process completed. Errors: #{errors}, and Success: #{success}--------------------------------------------------"
