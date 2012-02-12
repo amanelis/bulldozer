@@ -6,7 +6,6 @@ require 'open-uri'
 require 'nokogiri'
 require 'mechanize'
 require 'net/http'
-require 'yajl/http_stream'
 require 'active_record'
 require 'rails/all'
 require File.expand_path(File.dirname(__FILE__) + '/models/document')
